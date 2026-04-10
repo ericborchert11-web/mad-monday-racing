@@ -528,24 +528,24 @@
   </div>
 </section>
 
-<!-- ─── POWER CHART ─── -->
+<!-- ─── ELEVATION CHART ─── -->
 <section class="chart-section">
   <div class="section-header">
     <div>
-      <div class="section-label reveal" style="margin-bottom:8px;">04 — Race Data</div>
-      <h2 class="section-title reveal reveal-delay-1">Power <span style="color:transparent;-webkit-text-stroke:1px var(--sand)">Profile</span></h2>
+      <div class="section-label reveal" style="margin-bottom:8px;">04 — Route Data</div>
+      <h2 class="section-title reveal reveal-delay-1">Höhen<span style="color:transparent;-webkit-text-stroke:1px var(--sand)">profil</span></h2>
     </div>
     <div class="reveal reveal-delay-2" style="text-align:right;opacity:.4;">
-      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;opacity:.5;">Letzter Ride</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;margin-top:4px;">Mo. 07.04.26</div>
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;opacity:.5;">Grunewald Circuit</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;margin-top:4px;">~60 km · 380 m</div>
     </div>
   </div>
   <div class="chart-wrap reveal">
-    <svg class="chart-svg" id="powerChart" viewBox="0 0 1200 240" preserveAspectRatio="none"></svg>
-    <div class="chart-tooltip" id="chartTooltip">
-      <span style="opacity:.4;font-size:8px;letter-spacing:.2em;text-transform:uppercase;">Power</span>
-      <span class="tooltip-power" id="tooltipPower">—</span>
-      <span style="opacity:.4;font-size:8px;letter-spacing:.15em;">Watt</span>
+    <svg class="chart-svg" id="elevChart" viewBox="0 0 1200 240" preserveAspectRatio="none"></svg>
+    <div class="chart-tooltip" id="elevTooltipMain">
+      <span style="opacity:.4;font-size:8px;letter-spacing:.2em;text-transform:uppercase;">Höhe</span>
+      <span class="tooltip-power" id="elevTooltipVal">—</span>
+      <span style="opacity:.4;font-size:8px;letter-spacing:.15em;">m</span>
     </div>
   </div>
   <div class="chart-x-labels reveal">
@@ -565,7 +565,7 @@
     <div class="data-cell"><div class="data-number">14<span class="data-unit">×</span></div><div class="data-label">Rides Saison</div><div class="data-bar"><div class="data-bar-fill" style="width:27%"></div></div></div>
     <div class="data-cell"><div class="data-number">847<span class="data-unit">km</span></div><div class="data-label">Total Distance</div><div class="data-bar"><div class="data-bar-fill" style="width:55%"></div></div></div>
     <div class="data-cell"><div class="data-number">8.7<span class="data-unit">k</span></div><div class="data-label">Elevation m</div><div class="data-bar"><div class="data-bar-fill" style="width:40%"></div></div></div>
-    <div class="data-cell"><div class="data-number">263<span class="data-unit">w</span></div><div class="data-label">Avg. NP Peloton</div><div class="data-bar"><div class="data-bar-fill" style="width:72%"></div></div></div>
+    <div class="data-cell"><div class="data-number">18<span class="data-unit">:00</span></div><div class="data-label">Start — Every Monday</div><div class="data-bar"><div class="data-bar-fill" style="width:100%"></div></div></div>
   </div>
 </section>
 
@@ -786,51 +786,111 @@ elevMini.addEventListener('mousemove',e=>{
 elevMini.addEventListener('mouseleave',()=>{ elevCur.style.opacity='0'; elevTip.style.opacity='0'; });
 
 // ════════════════════════════════════════
-// POWER CHART
+// ELEVATION PROFILE (echte GPX-Daten)
 // ════════════════════════════════════════
-const chartSvg=document.getElementById('powerChart');
-const cTip=document.getElementById('chartTooltip');
-const cTipPow=document.getElementById('tooltipPower');
-const CW=1200,CH=240;
-const pwrData=[];
-let base=200;
-for(let i=0;i<120;i++){
-  base+=(Math.random()-.48)*40; base=Math.max(80,Math.min(450,base));
-  if(Math.random()<.05) base=Math.min(500,base+150);
-  pwrData.push(Math.round(base));
-}
-const maxP=Math.max(...pwrData),minP=Math.min(...pwrData);
-const cPts=pwrData.map((v,i)=>`${(i/(pwrData.length-1))*CW},${CH-((v-minP)/(maxP-minP))*(CH-20)-10}`).join(' ');
-const cArea=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-cArea.setAttribute('points',`0,${CH} `+cPts+` ${CW},${CH}`);cArea.setAttribute('fill','rgba(210,197,177,.05)');chartSvg.appendChild(cArea);
-[.25,.5,.75].forEach(f=>{
-  const y=CH-f*(CH-20)-10;
-  const gl=document.createElementNS('http://www.w3.org/2000/svg','line');
-  gl.setAttribute('x1',0);gl.setAttribute('x2',CW);gl.setAttribute('y1',y);gl.setAttribute('y2',y);
-  gl.setAttribute('stroke','rgba(210,197,177,.06)');gl.setAttribute('stroke-width',1);chartSvg.appendChild(gl);
-  const wv=Math.round(minP+f*(maxP-minP));
-  const wl=document.createElementNS('http://www.w3.org/2000/svg','text');
-  wl.setAttribute('x',8);wl.setAttribute('y',y-4);wl.setAttribute('fill','rgba(210,197,177,.25)');
-  wl.setAttribute('font-family','Space Mono,monospace');wl.setAttribute('font-size',8);wl.textContent=`${wv}w`;chartSvg.appendChild(wl);
+const elevChartSvg = document.getElementById('elevChart');
+const eTipMain = document.getElementById('elevTooltipMain');
+const eTipVal = document.getElementById('elevTooltipVal');
+const ECW=1200, ECH=240;
+
+// Echte Elevation aus GPX — alle 877 Punkte auf ~120 reduziert
+const elevData = GPX_ELEV.map(v => v + 30); // +30m offset (GPS-Kalibrierung)
+const eMaxV = Math.max(...elevData);
+const eMinV = Math.min(...elevData);
+const toEX = i => (i/(elevData.length-1)) * ECW;
+const toEY = v => ECH - ((v-eMinV)/(eMaxV-eMinV)) * (ECH-30) - 15;
+
+// Gradient defs
+const ecDefs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+const ecGrad = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+ecGrad.id='ecg'; ecGrad.setAttribute('x1','0'); ecGrad.setAttribute('x2','0');
+ecGrad.setAttribute('y1','0'); ecGrad.setAttribute('y2','1');
+[['0','rgba(210,197,177,0.18)'],['1','rgba(210,197,177,0)']].forEach(([o,c])=>{
+  const s=document.createElementNS('http://www.w3.org/2000/svg','stop');
+  s.setAttribute('offset',o); s.setAttribute('stop-color',c); ecGrad.appendChild(s);
 });
-const cLine=document.createElementNS('http://www.w3.org/2000/svg','polyline');
-cLine.setAttribute('points',cPts);cLine.setAttribute('fill','none');cLine.setAttribute('stroke','#D2C5B1');cLine.setAttribute('stroke-width',1.5);cLine.setAttribute('stroke-linejoin','round');chartSvg.appendChild(cLine);
-const cCross=document.createElementNS('http://www.w3.org/2000/svg','line');
-cCross.setAttribute('stroke','rgba(210,197,177,.2)');cCross.setAttribute('stroke-width',1);cCross.setAttribute('y1',0);cCross.setAttribute('y2',CH);cCross.style.display='none';chartSvg.appendChild(cCross);
-const cDot=document.createElementNS('http://www.w3.org/2000/svg','circle');
-cDot.setAttribute('r',4);cDot.setAttribute('fill','#D2C5B1');cDot.setAttribute('stroke','#1A1714');cDot.setAttribute('stroke-width',2);cDot.style.display='none';chartSvg.appendChild(cDot);
-chartSvg.addEventListener('mousemove',e=>{
-  const r=chartSvg.getBoundingClientRect();
-  const xRel=(e.clientX-r.left)/r.width;
-  const idx=Math.round(xRel*(pwrData.length-1));
-  if(idx<0||idx>=pwrData.length) return;
-  const svgX=xRel*CW, svgY=CH-((pwrData[idx]-minP)/(maxP-minP))*(CH-20)-10;
-  cCross.setAttribute('x1',svgX);cCross.setAttribute('x2',svgX);cCross.style.display='block';
-  cDot.setAttribute('cx',svgX);cDot.setAttribute('cy',svgY);cDot.style.display='block';
-  cTipPow.textContent=pwrData[idx];cTip.style.display='block';
-  cTip.style.left=(e.clientX-r.left+16)+'px';cTip.style.top=(e.clientY-r.top-40)+'px';
+ecDefs.appendChild(ecGrad); elevChartSvg.appendChild(ecDefs);
+
+const ecPts = elevData.map((v,i)=>`${toEX(i)},${toEY(v)}`).join(' ');
+
+// Area fill
+const ecArea = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+ecArea.setAttribute('points',`0,${ECH} `+ecPts+` ${ECW},${ECH}`);
+ecArea.setAttribute('fill','url(#ecg)');
+elevChartSvg.appendChild(ecArea);
+
+// Horizontal grid lines with labels
+[eMinV + (eMaxV-eMinV)*0.25, eMinV + (eMaxV-eMinV)*0.5, eMinV + (eMaxV-eMinV)*0.75].forEach(v=>{
+  const y = toEY(v);
+  const gl = document.createElementNS('http://www.w3.org/2000/svg','line');
+  gl.setAttribute('x1',0); gl.setAttribute('x2',ECW);
+  gl.setAttribute('y1',y); gl.setAttribute('y2',y);
+  gl.setAttribute('stroke','rgba(210,197,177,.06)'); gl.setAttribute('stroke-width',1);
+  elevChartSvg.appendChild(gl);
+  const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  lbl.setAttribute('x',8); lbl.setAttribute('y',y-4);
+  lbl.setAttribute('fill','rgba(210,197,177,.28)');
+  lbl.setAttribute('font-family','Space Mono,monospace'); lbl.setAttribute('font-size',9);
+  lbl.textContent = `${Math.round(v)}m`;
+  elevChartSvg.appendChild(lbl);
 });
-chartSvg.addEventListener('mouseleave',()=>{ cCross.style.display='none';cDot.style.display='none';cTip.style.display='none'; });
+
+// Drop point verticals on full chart
+// DP1/DP2 at ~km 30 (idx ~62% of route), DP3 at ~km 50 (idx ~85%)
+[{km:30,label:'DP1/2'},{km:50,label:'DP3'}].forEach(({km,label})=>{
+  const x = (km/60)*ECW;
+  const vl = document.createElementNS('http://www.w3.org/2000/svg','line');
+  vl.setAttribute('x1',x); vl.setAttribute('x2',x);
+  vl.setAttribute('y1',0); vl.setAttribute('y2',ECH);
+  vl.setAttribute('stroke','#E8A830'); vl.setAttribute('stroke-width','1');
+  vl.setAttribute('stroke-dasharray','4,4'); vl.setAttribute('opacity','.6');
+  elevChartSvg.appendChild(vl);
+  const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  lbl.setAttribute('x',x+5); lbl.setAttribute('y',18);
+  lbl.setAttribute('fill','#E8A830'); lbl.setAttribute('opacity','.7');
+  lbl.setAttribute('font-family','Space Mono,monospace'); lbl.setAttribute('font-size',8);
+  lbl.setAttribute('letter-spacing','1');
+  lbl.textContent = label;
+  elevChartSvg.appendChild(lbl);
+});
+
+// Line
+const ecLine = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+ecLine.setAttribute('points',ecPts);
+ecLine.setAttribute('fill','none');
+ecLine.setAttribute('stroke','#D2C5B1');
+ecLine.setAttribute('stroke-width',1.8);
+ecLine.setAttribute('stroke-linejoin','round');
+elevChartSvg.appendChild(ecLine);
+
+// Hover crosshair + dot
+const ecCross = document.createElementNS('http://www.w3.org/2000/svg','line');
+ecCross.setAttribute('stroke','rgba(210,197,177,.2)'); ecCross.setAttribute('stroke-width',1);
+ecCross.setAttribute('y1',0); ecCross.setAttribute('y2',ECH);
+ecCross.style.display='none'; elevChartSvg.appendChild(ecCross);
+
+const ecDot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+ecDot.setAttribute('r',4); ecDot.setAttribute('fill','#D2C5B1');
+ecDot.setAttribute('stroke','#1A1714'); ecDot.setAttribute('stroke-width',2);
+ecDot.style.display='none'; elevChartSvg.appendChild(ecDot);
+
+elevChartSvg.addEventListener('mousemove',e=>{
+  const r = elevChartSvg.getBoundingClientRect();
+  const xRel = (e.clientX-r.left)/r.width;
+  const idx = Math.min(elevData.length-1, Math.max(0, Math.round(xRel*(elevData.length-1))));
+  const svgX = toEX(idx), svgY = toEY(elevData[idx]);
+  ecCross.setAttribute('x1',svgX); ecCross.setAttribute('x2',svgX);
+  ecCross.style.display='block';
+  ecDot.setAttribute('cx',svgX); ecDot.setAttribute('cy',svgY);
+  ecDot.style.display='block';
+  eTipVal.textContent = `${Math.round(elevData[idx])}`;
+  eTipMain.style.display='block';
+  eTipMain.style.left = (e.clientX-r.left+16)+'px';
+  eTipMain.style.top = (e.clientY-r.top-40)+'px';
+});
+elevChartSvg.addEventListener('mouseleave',()=>{
+  ecCross.style.display='none'; ecDot.style.display='none'; eTipMain.style.display='none';
+});
 
 // ════════════════════════════════════════
 // SCROLL REVEAL
