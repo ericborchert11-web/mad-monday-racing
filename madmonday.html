@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAD MONDAY RACING</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,200;0,300;0,400;0,700;0,900;1,700&family=Barlow:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --sand: #D2C5B1;
+    --dark: #1A1714;
+    --brown: #4B453A;
+    --mid: #2E2B27;
+    --mid2: #242018;
+    --light: #F5F0E8;
+    --dp: #E8A830;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--dark);
+    color: var(--sand);
+    font-family: 'Barlow', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── CURSOR ── */
+  .cursor { width:8px;height:8px;background:var(--sand);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;mix-blend-mode:difference; }
+  .cursor-ring { width:32px;height:32px;border:1px solid var(--sand);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transition:all .15s ease;mix-blend-mode:difference; }
+
+  /* ── NAV ── */
+  nav {
+    position:fixed;top:0;left:0;right:0;z-index:500;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:28px 48px;
+  }
+  nav::before { content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(26,23,20,.92) 0%,transparent 100%);pointer-events:none; }
+  .nav-logo { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;letter-spacing:.3em;color:var(--sand);text-transform:uppercase;position:relative; }
+  .nav-links { display:flex;gap:40px;list-style:none;position:relative; }
+  .nav-links a { font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.25em;color:var(--sand);text-decoration:none;text-transform:uppercase;opacity:.6;transition:opacity .2s; }
+  .nav-links a:hover { opacity:1; }
+  .nav-cta { font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--dark);background:var(--sand);border:none;padding:10px 20px;text-transform:uppercase;cursor:none;position:relative;transition:background .2s; }
+  .nav-cta:hover { background:var(--light); }
+
+  /* ── HERO ── */
+  .hero { min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 48px 80px;position:relative;overflow:hidden; }
+  .hero-bg { position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(74,69,58,.15) 0%,transparent 60%),linear-gradient(160deg,#1A1714 0%,#0D0C0A 100%); }
+  .hero-grid { position:absolute;inset:0;background-image:linear-gradient(rgba(210,197,177,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(210,197,177,.03) 1px,transparent 1px);background-size:80px 80px; }
+  .hero-number { position:absolute;right:-20px;top:50%;transform:translateY(-50%);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(200px,30vw,420px);color:transparent;-webkit-text-stroke:1px rgba(210,197,177,.06);line-height:1;pointer-events:none;user-select:none;letter-spacing:-.05em; }
+  .hero-eyebrow { font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.3em;color:var(--sand);opacity:.5;text-transform:uppercase;margin-bottom:24px;position:relative;display:flex;align-items:center;gap:16px; }
+  .hero-eyebrow::before { content:'';display:block;width:40px;height:1px;background:currentColor; }
+  .hero-title { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(72px,12vw,180px);line-height:.88;text-transform:uppercase;letter-spacing:-.02em;color:var(--sand);position:relative;margin-bottom:8px; }
+  .hero-title .italic { font-style:italic;color:transparent;-webkit-text-stroke:1.5px var(--sand); }
+  .hero-subtitle { font-family:'Barlow Condensed',sans-serif;font-weight:200;font-size:clamp(40px,6vw,90px);text-transform:uppercase;letter-spacing:.1em;color:var(--sand);opacity:.4;position:relative;margin-bottom:56px; }
+  .hero-meta { display:flex;gap:64px;align-items:flex-end;position:relative; }
+  .meta-item label { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.25em;opacity:.4;text-transform:uppercase;display:block;margin-bottom:6px; }
+  .meta-item .value { font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;letter-spacing:.05em;text-transform:uppercase; }
+  .countdown-block { margin-left:auto;text-align:right; }
+  .countdown-label { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.3em;opacity:.4;text-transform:uppercase;margin-bottom:8px; }
+  .countdown-digits { font-family:'Space Mono',monospace;font-size:28px;letter-spacing:.05em;color:var(--sand); }
+  .countdown-digits span { opacity:.3; }
+  .scroll-indicator { position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:.3;animation:pulse 2s infinite; }
+  .scroll-indicator span { font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.3em;text-transform:uppercase;writing-mode:vertical-rl; }
+  .scroll-line { width:1px;height:48px;background:linear-gradient(to bottom,var(--sand),transparent);animation:scrollDown 1.8s infinite; }
+  @keyframes scrollDown { 0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}50.01%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom} }
+  @keyframes pulse { 0%,100%{opacity:.3}50%{opacity:.6} }
+  .title-row { display:flex;align-items:baseline;gap:24px; }
+  .title-line { flex:1;height:2px;background:rgba(210,197,177,.15);margin-bottom:8px; }
+
+  /* ── TICKER ── */
+  .ticker { background:var(--sand);padding:14px 0;overflow:hidden; }
+  .ticker-track { display:flex;white-space:nowrap;animation:ticker 22s linear infinite; }
+  .ticker-item { font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.2em;color:var(--dark);text-transform:uppercase;padding:0 48px;flex-shrink:0; }
+  .ticker-sep { color:var(--brown);opacity:.4; }
+  @keyframes ticker { from{transform:translateX(0)}to{transform:translateX(-50%)} }
+
+  /* ── SHARED SECTION UTIL ── */
+  .section-label { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.3em;opacity:.35;text-transform:uppercase; }
+  .section-title { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(36px,5vw,72px);text-transform:uppercase;letter-spacing:-.01em; }
+  .section-divider { height:1px;background:rgba(210,197,177,.1);margin:0 48px; }
+
+  /* ── MANIFESTO ── */
+  .manifesto { padding:160px 48px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative; }
+  .manifesto::after { content:'';position:absolute;bottom:0;left:48px;right:48px;height:1px;background:rgba(210,197,177,.1); }
+  .manifesto-claim { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(48px,7vw,100px);text-transform:uppercase;letter-spacing:-.02em;line-height:.9; }
+  .manifesto-claim .outline { color:transparent;-webkit-text-stroke:1.5px var(--sand); }
+  .manifesto-right { padding-left:40px;border-left:1px solid rgba(210,197,177,.15); }
+  .manifesto-text { font-size:15px;line-height:1.8;opacity:.6;margin-bottom:40px;font-weight:300; }
+  .stats-grid { display:grid;grid-template-columns:1fr 1fr;gap:32px; }
+  .stat-num { font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:48px;letter-spacing:-.02em;line-height:1; }
+  .stat-unit { font-family:'Space Mono',monospace;font-size:11px;opacity:.4;margin-left:4px; }
+  .stat-label { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;opacity:.35;text-transform:uppercase;margin-top:4px; }
+
+  /* ── ROUTE SECTION (integrated map) ── */
+  .route-section {
+    position: relative;
+    height: 92vh;
+    min-height: 640px;
+    overflow: hidden;
+  }
+  /* Section header bar above the map */
+  .route-header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 48px 48px 32px;
+    background: linear-gradient(to bottom, rgba(26,23,20,1) 0%, rgba(26,23,20,.7) 70%, transparent 100%);
+    pointer-events: none;
+  }
+  .route-header-right {
+    text-align: right;
+    pointer-events: none;
+  }
+  .route-header-stat { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;opacity:.4;text-transform:uppercase; }
+  .route-header-val { font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;margin-top:2px; }
+
+  /* Leaflet map fills section */
+  #routeMap {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .leaflet-container { background:#0D0C0A !important; }
+  .leaflet-control-zoom { border:1px solid rgba(210,197,177,.15) !important;border-radius:0 !important;margin:20px !important; }
+  .leaflet-control-zoom a { background:rgba(26,23,20,.9) !important;color:var(--sand) !important;border:none !important;border-bottom:1px solid rgba(210,197,177,.1) !important;font-family:'Barlow Condensed',sans-serif !important;font-weight:700 !important;font-size:16px !important;line-height:26px !important;width:28px !important;height:28px !important;cursor:none !important;border-radius:0 !important; }
+  .leaflet-control-zoom a:hover { background:rgba(210,197,177,.1) !important; }
+  .leaflet-control-attribution { display:none !important; }
+
+  /* Left panel over map */
+  .route-panel {
+    position: absolute;
+    top: 130px;
+    left: 32px;
+    bottom: 32px;
+    width: 296px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    pointer-events: none;
+  }
+  .route-panel-inner {
+    background: rgba(26,23,20,.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(210,197,177,.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+    pointer-events: all;
+  }
+  .rpanel-section {
+    padding: 20px 20px;
+    border-bottom: 1px solid rgba(210,197,177,.07);
+    flex-shrink: 0;
+  }
+  .rpanel-label {
+    font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.25em;opacity:.3;text-transform:uppercase;
+    margin-bottom:14px;display:flex;align-items:center;gap:8px;
+  }
+  .rpanel-label::after { content:'';flex:1;height:1px;background:rgba(210,197,177,.1); }
+
+  /* Route step list */
+  .route-steps-list { overflow-y:auto;flex:1; }
+  .route-steps-list::-webkit-scrollbar { width:2px; }
+  .route-steps-list::-webkit-scrollbar-thumb { background:rgba(210,197,177,.15); }
+  .rstep {
+    display:flex;gap:12px;padding:6px 20px;cursor:none;transition:background .15s;
+  }
+  .rstep:hover { background:rgba(210,197,177,.04); }
+  .rstep-line { display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:14px; }
+  .rstep-dot { width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(210,197,177,.5);background:var(--dark);flex-shrink:0; }
+  .rstep-dot.full { background:var(--sand);border-color:var(--sand); }
+  .rstep-dot.dp { border-color:var(--dp);background:rgba(232,168,48,.15); }
+  .rstep-conn { width:1px;flex:1;min-height:14px;background:rgba(210,197,177,.12);margin:2px 0; }
+  .rstep-conn.dash { background:repeating-linear-gradient(to bottom,rgba(210,197,177,.12) 0,rgba(210,197,177,.12) 3px,transparent 3px,transparent 7px); }
+  .rstep-body { flex:1;padding-bottom:6px; }
+  .rstep-name { font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.04em;line-height:1.2; }
+  .rstep-name.dim { font-weight:300;opacity:.45;font-size:11px; }
+  .rstep-sub { font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:.1em;opacity:.3;text-transform:uppercase;margin-top:2px; }
+  .rstep-badge { display:inline-block;font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.12em;background:rgba(232,168,48,.12);color:var(--dp);border:1px solid rgba(232,168,48,.25);padding:2px 6px;text-transform:uppercase;margin-top:3px; }
+
+  /* Elevation mini chart in panel */
+  .elev-mini { position:relative;height:64px;margin-top:4px; }
+  .elev-mini svg { width:100%;height:100%;overflow:visible; }
+  .elev-cursor { position:absolute;top:0;bottom:0;width:1px;background:var(--sand);opacity:0;pointer-events:none;transition:opacity .1s; }
+  .elev-tip { position:absolute;top:0;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.08em;background:rgba(26,23,20,.9);border:1px solid rgba(210,197,177,.15);padding:3px 6px;pointer-events:none;opacity:0;transform:translateY(-100%) translateY(-4px);white-space:nowrap;transition:opacity .1s; }
+
+  /* Layer toggles */
+  .toggle-row { display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(210,197,177,.05);cursor:none; }
+  .toggle-row:last-child { border-bottom:none; }
+  .toggle-name { font-family:'Barlow Condensed',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.05em;opacity:.65;display:flex;align-items:center;gap:8px; }
+  .tswatch { width:8px;height:8px;border-radius:50%; }
+  .tswitch { width:28px;height:14px;background:rgba(210,197,177,.15);border-radius:7px;position:relative;cursor:none;transition:background .2s; }
+  .tswitch.on { background:var(--sand); }
+  .tswitch::after { content:'';position:absolute;width:10px;height:10px;background:var(--dark);border-radius:50%;top:2px;left:2px;transition:transform .2s; }
+  .tswitch.on::after { transform:translateX(14px); }
+
+  /* Corner badge on map */
+  .map-corner-badge {
+    position:absolute;bottom:28px;right:28px;z-index:10;
+    display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;
+  }
+  .mcbadge {
+    background:rgba(26,23,20,.85);backdrop-filter:blur(8px);
+    border:1px solid rgba(210,197,177,.12);padding:8px 14px;
+  }
+  .mcbadge-label { font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:.2em;opacity:.35;text-transform:uppercase;margin-bottom:2px; }
+  .mcbadge-val { font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.03em; }
+
+  /* Bottom gradient over map */
+  .route-fade-bottom {
+    position:absolute;bottom:0;left:0;right:0;height:80px;z-index:5;
+    background:linear-gradient(to bottom,transparent,rgba(26,23,20,1));
+    pointer-events:none;
+  }
+
+  /* Leaflet popup */
+  .leaflet-popup-content-wrapper { background:rgba(26,23,20,.95) !important;border:1px solid rgba(210,197,177,.2) !important;border-radius:0 !important;box-shadow:0 8px 32px rgba(0,0,0,.6) !important;backdrop-filter:blur(10px) !important; }
+  .leaflet-popup-content { margin:14px 18px !important;color:var(--sand) !important;font-family:'Barlow Condensed',sans-serif !important; }
+  .leaflet-popup-tip { background:rgba(26,23,20,.95) !important; }
+  .leaflet-popup-close-button { color:var(--sand) !important;opacity:.4 !important;top:8px !important;right:8px !important; }
+  .popup-label { font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:.2em;opacity:.35;text-transform:uppercase;margin-bottom:4px; }
+  .popup-title { font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.04em;line-height:1.2;margin-bottom:6px; }
+  .popup-detail { font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.08em;opacity:.45;line-height:1.7; }
+  .popup-badge { font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.15em;background:rgba(232,168,48,.12);color:var(--dp);border:1px solid rgba(232,168,48,.25);padding:3px 8px;text-transform:uppercase;display:inline-block;margin-top:6px; }
+
+  /* ── KIT SECTION ── */
+  .kit-section { padding:160px 48px;display:grid;grid-template-columns:1fr 1fr;gap:0;position:relative; }
+  .kit-section::before { content:'';position:absolute;top:0;left:48px;right:48px;height:1px;background:rgba(210,197,177,.1); }
+  .kit-visual { background:var(--mid);aspect-ratio:4/5;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center; }
+  .kit-visual-bg { position:absolute;inset:0;background:radial-gradient(ellipse at center,#2E2B27 0%,#1A1714 100%); }
+  .kit-placeholder { position:relative;text-align:center;opacity:.12; }
+  .kit-placeholder-text { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:120px;text-transform:uppercase;line-height:1;letter-spacing:-.05em; }
+  .kit-tag { position:absolute;top:32px;left:32px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;opacity:.5;text-transform:uppercase;border:1px solid rgba(210,197,177,.2);padding:8px 12px; }
+  .kit-color-chip { position:absolute;bottom:32px;right:32px;display:flex;gap:8px; }
+  .chip { width:24px;height:24px;border-radius:50%; }
+  .chip-sand { background:var(--sand); }
+  .chip-dark { background:var(--brown);border:1px solid rgba(210,197,177,.2); }
+  .chip-grey { background:#8A8680; }
+  .kit-info { padding:80px;display:flex;flex-direction:column;justify-content:center;border:1px solid rgba(210,197,177,.1);border-left:none; }
+  .kit-eyebrow { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.3em;opacity:.35;text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:12px; }
+  .kit-eyebrow::before { content:'';width:24px;height:1px;background:currentColor; }
+  .kit-name { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:64px;text-transform:uppercase;line-height:.9;letter-spacing:-.02em;margin-bottom:32px; }
+  .kit-name .outline { color:transparent;-webkit-text-stroke:1px var(--sand); }
+  .kit-desc { font-size:14px;line-height:1.9;opacity:.5;font-weight:300;margin-bottom:48px;max-width:360px; }
+  .kit-specs { margin-bottom:48px; }
+  .spec-row { display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(210,197,177,.08); }
+  .spec-key { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;opacity:.35;text-transform:uppercase; }
+  .spec-val { font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em; }
+  .kit-cta { display:inline-block;background:var(--sand);color:var(--dark);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.25em;text-transform:uppercase;padding:18px 40px;border:none;cursor:none;align-self:flex-start;transition:background .2s,transform .2s;text-decoration:none; }
+  .kit-cta:hover { background:var(--light);transform:translateX(4px); }
+
+  /* ── CHART / POWER ── */
+  .chart-section { padding:120px 48px;position:relative; }
+  .chart-section::before { content:'';position:absolute;top:0;left:48px;right:48px;height:1px;background:rgba(210,197,177,.1); }
+  .section-header { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:80px; }
+  .chart-wrap { position:relative;height:240px;border-bottom:1px solid rgba(210,197,177,.15);border-left:1px solid rgba(210,197,177,.15); }
+  .chart-svg { width:100%;height:100%;overflow:visible; }
+  .chart-tooltip { position:absolute;background:var(--mid);border:1px solid rgba(210,197,177,.2);padding:12px 16px;pointer-events:none;display:none;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em; }
+  .chart-tooltip .tooltip-power { font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;display:block;margin-top:4px; }
+  .chart-x-labels { display:flex;justify-content:space-between;margin-top:12px; }
+  .chart-x-labels span { font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.15em;opacity:.3;text-transform:uppercase; }
+
+  /* ── DATA GRID ── */
+  .data-section { padding:0 48px 120px;position:relative; }
+  .data-grid { display:grid;grid-template-columns:repeat(4,1fr);border:1px solid rgba(210,197,177,.1);margin-top:80px; }
+  .data-cell { padding:48px 40px;border-right:1px solid rgba(210,197,177,.1);position:relative;overflow:hidden;transition:background .3s;cursor:none; }
+  .data-cell:last-child { border-right:none; }
+  .data-cell:hover { background:rgba(210,197,177,.03); }
+  .data-cell::after { content:'';position:absolute;bottom:0;left:0;height:2px;background:var(--sand);width:0;transition:width .4s ease; }
+  .data-cell:hover::after { width:100%; }
+  .data-number { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:56px;letter-spacing:-.03em;line-height:1;margin-bottom:8px; }
+  .data-unit { font-family:'Space Mono',monospace;font-size:10px;opacity:.4;margin-left:4px;letter-spacing:.1em; }
+  .data-label { font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.25em;opacity:.3;text-transform:uppercase;margin-top:8px; }
+  .data-bar { position:absolute;bottom:0;left:0;height:3px;background:rgba(210,197,177,.12);width:100%; }
+  .data-bar-fill { height:100%;background:var(--sand); }
+
+  /* ── NEXT RIDE ── */
+  .next-ride { padding:160px 48px;display:grid;grid-template-columns:2fr 1fr;gap:80px;position:relative;align-items:center; }
+  .next-ride::before { content:'';position:absolute;top:0;left:48px;right:48px;height:1px;background:rgba(210,197,177,.1); }
+  .next-big { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(60px,10vw,140px);text-transform:uppercase;line-height:.88;letter-spacing:-.02em; }
+  .next-big .day { color:transparent;-webkit-text-stroke:1.5px var(--sand); }
+  .next-detail-row { display:flex;justify-content:space-between;padding:20px 0;border-bottom:1px solid rgba(210,197,177,.08); }
+  .next-detail-row:first-child { border-top:1px solid rgba(210,197,177,.08); }
+  .next-key { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;opacity:.35;text-transform:uppercase;align-self:center; }
+  .next-val { font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.05em;text-align:right; }
+  .join-btn { margin-top:32px;display:block;background:transparent;border:1px solid var(--sand);color:var(--sand);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.3em;text-transform:uppercase;padding:20px 0;text-align:center;cursor:none;transition:all .3s;text-decoration:none; }
+  .join-btn:hover { background:var(--sand);color:var(--dark); }
+
+  /* ── FOOTER ── */
+  footer { padding:80px 48px;border-top:1px solid rgba(210,197,177,.1);display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;align-items:start; }
+  .footer-brand { font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:48px;text-transform:uppercase;line-height:.9;letter-spacing:-.02em; }
+  .footer-brand .outline { color:transparent;-webkit-text-stroke:1px var(--sand); }
+  .footer-sub { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;opacity:.3;text-transform:uppercase;margin-top:12px; }
+  .footer-col-title { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.25em;opacity:.3;text-transform:uppercase;margin-bottom:24px; }
+  .footer-links { list-style:none; }
+  .footer-links li { margin-bottom:12px; }
+  .footer-links a { font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:300;text-transform:uppercase;letter-spacing:.05em;color:var(--sand);text-decoration:none;opacity:.5;transition:opacity .2s; }
+  .footer-links a:hover { opacity:1; }
+  .footer-bottom { padding:24px 48px;display:flex;justify-content:space-between;border-top:1px solid rgba(210,197,177,.06); }
+  .footer-bottom span { font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.15em;opacity:.25;text-transform:uppercase; }
+
+  /* ── REVEAL ANIMATIONS ── */
+  .reveal { opacity:0;transform:translateY(32px);transition:opacity .8s ease,transform .8s ease; }
+  .reveal.visible { opacity:1;transform:translateY(0); }
+  .reveal-delay-1 { transition-delay:.1s; }
+  .reveal-delay-2 { transition-delay:.2s; }
+  .reveal-delay-3 { transition-delay:.35s; }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- ─── NAV ─── -->
+<nav>
+  <div class="nav-logo">Mad Monday Racing</div>
+  <ul class="nav-links">
+    <li><a href="#manifesto">Rides</a></li>
+    <li><a href="#route">Route</a></li>
+    <li><a href="#kit">Kit</a></li>
+    <li><a href="#data">Results</a></li>
+    <li><a href="#next">About</a></li>
+  </ul>
+  <button class="nav-cta">Join Strava</button>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-number">18</div>
+  <p class="hero-eyebrow">Berlin — Grunewald — Every Monday — 18:00</p>
+  <div class="title-row">
+    <h1 class="hero-title">MAD<br><span class="italic">Monday</span></h1>
+    <div class="title-line"></div>
+  </div>
+  <p class="hero-subtitle">Racing</p>
+  <div class="hero-meta">
+    <div class="meta-item"><label>Start</label><div class="value">18:00 Uhr</div></div>
+    <div class="meta-item"><label>Location</label><div class="value">Grunewald</div></div>
+    <div class="meta-item"><label>Distance</label><div class="value">~60 km</div></div>
+    <div class="meta-item"><label>Format</label><div class="value">Race Sim</div></div>
+    <div class="countdown-block">
+      <div class="countdown-label">Nächster Ride in</div>
+      <div class="countdown-digits" id="countdown">—</div>
+    </div>
+  </div>
+  <div class="scroll-indicator"><div class="scroll-line"></div><span>Scroll</span></div>
+</section>
+
+<!-- ─── TICKER ─── -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="ticker-item">No Race <span class="ticker-sep">///</span> Everything In</span>
+    <span class="ticker-item">280 W — No Comment <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">Klemmen lassen <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">Mad Monday Racing <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">Grunewald — Wannsee — Berlin <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">Verhungern lassen <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">No Race <span class="ticker-sep">///</span> Everything In</span>
+    <span class="ticker-item">280 W — No Comment <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">Klemmen lassen <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">Mad Monday Racing <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">Grunewald — Wannsee — Berlin <span class="ticker-sep">///</span></span>
+    <span class="ticker-item">Verhungern lassen <span class="ticker-sep">///</span></span>
+  </div>
+</div>
+
+<!-- ─── MANIFESTO ─── -->
+<section class="manifesto" id="manifesto">
+  <div class="manifesto-claim reveal">
+    NO<br>RACE.<br><span class="outline">EVERY-<br>THING</span><br>IN.
+  </div>
+  <div class="manifesto-right reveal reveal-delay-2">
+    <p class="manifesto-text">Jeden Montag. 18 Uhr. Wer kommt, will fahren. Kein Ausreden, kein Schlendern — das Peloton macht die Arbeit, der Asphalt macht den Rest. Race-simulated training heißt: du verhungerst oder du überlebst.</p>
+    <div class="stats-grid">
+      <div class="stat-item"><div class="stat-num">47<span class="stat-unit">+</span></div><div class="stat-label">Rider / Ride</div></div>
+      <div class="stat-item"><div class="stat-num">380<span class="stat-unit">m</span></div><div class="stat-label">Elevation</div></div>
+      <div class="stat-item"><div class="stat-num">38<span class="stat-unit">km/h</span></div><div class="stat-label">Avg. Speed</div></div>
+      <div class="stat-item"><div class="stat-num">52<span class="stat-unit">w</span></div><div class="stat-label">Mon — Season</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ROUTE (INTERACTIVE MAP) ─── -->
+<section class="route-section" id="route">
+
+  <!-- Header overlay -->
+  <div class="route-header">
+    <div>
+      <div class="section-label" style="margin-bottom:8px;">02 — The Route</div>
+      <div class="section-title" style="font-size:clamp(28px,3.5vw,52px);">Grunewald<br><span style="color:transparent;-webkit-text-stroke:1px var(--sand)">Circuit</span></div>
+    </div>
+    <div class="route-header-right">
+      <div class="route-header-stat">Havelchaussee — Wannsee — Glienicker Brücke</div>
+      <div class="route-header-val">~60 km · 3 Drop Points</div>
+    </div>
+  </div>
+
+  <!-- Leaflet Map -->
+  <div id="routeMap"></div>
+
+  <!-- Left panel -->
+  <div class="route-panel">
+    <div class="route-panel-inner">
+
+      <!-- Steps -->
+      <div style="overflow-y:auto;flex:1;" id="rStepScroll">
+        <div style="padding:16px 20px 8px;">
+          <div class="rpanel-label">Strecke</div>
+        </div>
+        <div class="rstep" data-fly="0">
+          <div class="rstep-line"><div class="rstep-dot full"></div><div class="rstep-conn"></div></div>
+          <div class="rstep-body"><div class="rstep-name">Tiroler Stuben</div><div class="rstep-sub">Start — Havelchaussee</div></div>
+        </div>
+        <div class="rstep" data-fly="1">
+          <div class="rstep-line"><div class="rstep-dot"></div><div class="rstep-conn"></div></div>
+          <div class="rstep-body"><div class="rstep-name dim">Havelchaussee</div><div class="rstep-sub">Südwärts entlang der Havel</div></div>
+        </div>
+        <div class="rstep" data-fly="2">
+          <div class="rstep-line"><div class="rstep-dot dp"></div><div class="rstep-conn"></div></div>
+          <div class="rstep-body"><div class="rstep-name">Schwanenwerder Kreuzung</div><div class="rstep-badge">⬡ Drop Point 1</div><div class="rstep-sub">Warten · dann Inselrunde</div></div>
+        </div>
+        <div class="rstep" data-fly="3">
+          <div class="rstep-line"><div class="rstep-dot"></div><div class="rstep-conn dash"></div></div>
+          <div class="rstep-body"><div class="rstep-name dim">Insel Schwanenwerder</div><div class="rstep-sub">Komplette Inselrunde</div></div>
+        </div>
+        <div class="rstep" data-fly="4">
+          <div class="rstep-line"><div class="rstep-dot dp"></div><div class="rstep-conn"></div></div>
+          <div class="rstep-body"><div class="rstep-name">Schwanenwerder Kreuzung</div><div class="rstep-badge">⬡ Drop Point 2</div><div class="rstep-sub">Sammeln nach Insel</div></div>
+        </div>
+        <div class="rstep" data-fly="5">
+          <div class="rstep-line"><div class="rstep-dot"></div><div class="rstep-conn"></div></div>
+          <div class="rstep-body"><div class="rstep-name dim">Pfaueninselweg · Nikolskoer Weg · Moorlakeweg</div><div class="rstep-sub">Am Wasser südwärts</div></div>
+        </div>
+        <div class="rstep" data-fly="6">
+          <div class="rstep-line"><div class="rstep-dot dp"></div><div class="rstep-conn"></div></div>
+          <div class="rstep-body"><div class="rstep-name">Glienicker Brücke</div><div class="rstep-badge">⬡ Drop Point 3</div><div class="rstep-sub">Wenden · Rückweg Nord</div></div>
+        </div>
+        <div class="rstep" data-fly="7">
+          <div class="rstep-line"><div class="rstep-dot"></div><div class="rstep-conn"></div></div>
+          <div class="rstep-body"><div class="rstep-name dim">Moorlakeweg · Nikolskoer Weg · Königsstraße · Wannsee</div><div class="rstep-sub">Rückweg Havelchaussee</div></div>
+        </div>
+        <div class="rstep" data-fly="8" style="margin-bottom:8px;">
+          <div class="rstep-line"><div class="rstep-dot full"></div></div>
+          <div class="rstep-body"><div class="rstep-name">Tiroler Stuben</div><div class="rstep-sub">Finish</div></div>
+        </div>
+      </div>
+
+      <!-- Elevation mini -->
+      <div class="rpanel-section">
+        <div class="rpanel-label">Höhenprofil</div>
+        <div class="elev-mini" id="elevMini">
+          <svg id="elevMiniSvg" viewBox="0 0 256 64" preserveAspectRatio="none"></svg>
+          <div class="elev-cursor" id="elevCur"></div>
+          <div class="elev-tip" id="elevTip"></div>
+        </div>
+      </div>
+
+      <!-- Layer toggles -->
+      <div class="rpanel-section" style="padding-bottom:16px;">
+        <div class="rpanel-label">Ansicht</div>
+        <div class="toggle-row" onclick="toggleLayer('out')">
+          <div class="toggle-name"><div class="tswatch" style="background:var(--sand)"></div>Outbound</div>
+          <div class="tswitch on" id="tog-out"></div>
+        </div>
+        <div class="toggle-row" onclick="toggleLayer('ret')">
+          <div class="toggle-name"><div class="tswatch" style="background:rgba(210,197,177,.35)"></div>Rückweg</div>
+          <div class="tswitch on" id="tog-ret"></div>
+        </div>
+        <div class="toggle-row" onclick="toggleLayer('dps')">
+          <div class="toggle-name"><div class="tswatch" style="background:var(--dp)"></div>Drop Points</div>
+          <div class="tswitch on" id="tog-dps"></div>
+        </div>
+        <div class="toggle-row" onclick="toggleLayer('isl')">
+          <div class="toggle-name"><div class="tswatch" style="background:rgba(210,197,177,.2)"></div>Schwanenwerder</div>
+          <div class="tswitch on" id="tog-isl"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Corner badge -->
+  <div class="map-corner-badge">
+    <div class="mcbadge"><div class="mcbadge-label">Start / Finish</div><div class="mcbadge-val">Tiroler Stuben</div></div>
+    <div class="mcbadge" style="border-color:rgba(232,168,48,.2)"><div class="mcbadge-label" style="color:var(--dp)">Drop Points</div><div class="mcbadge-val" style="font-size:14px;opacity:.7">DP1 · DP2 · DP3</div></div>
+  </div>
+
+  <div class="route-fade-bottom"></div>
+</section>
+
+<!-- ─── KIT ─── -->
+<section class="kit-section" id="kit">
+  <div class="kit-visual reveal">
+    <div class="kit-visual-bg"></div>
+    <div class="kit-placeholder"><div class="kit-placeholder-text">MM</div></div>
+    <div class="kit-tag">2026 Kit</div>
+    <div class="kit-color-chip">
+      <div class="chip chip-sand"></div>
+      <div class="chip chip-dark"></div>
+      <div class="chip chip-grey"></div>
+    </div>
+  </div>
+  <div class="kit-info reveal reveal-delay-1">
+    <div class="kit-eyebrow">03 — Kit</div>
+    <h2 class="kit-name">Season<br><span class="outline">2026</span><br>Kit</h2>
+    <p class="kit-desc">Jersey und Bib in der MM-CI. Sand auf Asphalt. Kein Schnörkel, kein Sponsor. Wer trägt, weiß warum er Montags um 18 Uhr am Startpunkt steht.</p>
+    <div class="kit-specs">
+      <div class="spec-row"><span class="spec-key">Jersey</span><span class="spec-val">Sand #D2C5B1</span></div>
+      <div class="spec-row"><span class="spec-key">Bib</span><span class="spec-val">Grau / Neutral</span></div>
+      <div class="spec-row"><span class="spec-key">Produktion</span><span class="spec-val">AYVA Sportswear</span></div>
+      <div class="spec-row"><span class="spec-key">Verfügbar</span><span class="spec-val">Saison 2026</span></div>
+      <div class="spec-row"><span class="spec-key">Sponsor</span><span class="spec-val">Keiner.</span></div>
+    </div>
+    <a href="#" class="kit-cta">Kit anfragen →</a>
+  </div>
+</section>
+
+<!-- ─── POWER CHART ─── -->
+<section class="chart-section">
+  <div class="section-header">
+    <div>
+      <div class="section-label reveal" style="margin-bottom:8px;">04 — Race Data</div>
+      <h2 class="section-title reveal reveal-delay-1">Power <span style="color:transparent;-webkit-text-stroke:1px var(--sand)">Profile</span></h2>
+    </div>
+    <div class="reveal reveal-delay-2" style="text-align:right;opacity:.4;">
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;opacity:.5;">Letzter Ride</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;margin-top:4px;">Mo. 07.04.26</div>
+    </div>
+  </div>
+  <div class="chart-wrap reveal">
+    <svg class="chart-svg" id="powerChart" viewBox="0 0 1200 240" preserveAspectRatio="none"></svg>
+    <div class="chart-tooltip" id="chartTooltip">
+      <span style="opacity:.4;font-size:8px;letter-spacing:.2em;text-transform:uppercase;">Power</span>
+      <span class="tooltip-power" id="tooltipPower">—</span>
+      <span style="opacity:.4;font-size:8px;letter-spacing:.15em;">Watt</span>
+    </div>
+  </div>
+  <div class="chart-x-labels reveal">
+    <span>0 km</span><span>10 km</span><span>20 km</span><span>30 km</span><span>40 km</span><span>50 km</span><span>58 km</span>
+  </div>
+</section>
+
+<!-- ─── DATA GRID ─── -->
+<section class="data-section" id="data">
+  <div class="section-header">
+    <div>
+      <div class="section-label reveal" style="margin-bottom:8px;">05 — Season Stats</div>
+      <h2 class="section-title reveal reveal-delay-1">2026 <span style="color:transparent;-webkit-text-stroke:1px var(--sand)">Saison</span></h2>
+    </div>
+  </div>
+  <div class="data-grid reveal">
+    <div class="data-cell"><div class="data-number">14<span class="data-unit">×</span></div><div class="data-label">Rides Saison</div><div class="data-bar"><div class="data-bar-fill" style="width:27%"></div></div></div>
+    <div class="data-cell"><div class="data-number">847<span class="data-unit">km</span></div><div class="data-label">Total Distance</div><div class="data-bar"><div class="data-bar-fill" style="width:55%"></div></div></div>
+    <div class="data-cell"><div class="data-number">8.7<span class="data-unit">k</span></div><div class="data-label">Elevation m</div><div class="data-bar"><div class="data-bar-fill" style="width:40%"></div></div></div>
+    <div class="data-cell"><div class="data-number">263<span class="data-unit">w</span></div><div class="data-label">Avg. NP Peloton</div><div class="data-bar"><div class="data-bar-fill" style="width:72%"></div></div></div>
+  </div>
+</section>
+
+<!-- ─── NEXT RIDE ─── -->
+<section class="next-ride" id="next">
+  <div class="reveal">
+    <div class="section-label" style="margin-bottom:32px;">06 — Nächster Ride</div>
+    <div class="next-big">MON<br><span class="day">DAY</span><br>18:00</div>
+  </div>
+  <div class="reveal reveal-delay-2">
+    <div class="next-detail-row"><span class="next-key">Datum</span><span class="next-val">Mo. 14.04.26</span></div>
+    <div class="next-detail-row"><span class="next-key">Start</span><span class="next-val">18:00 Uhr</span></div>
+    <div class="next-detail-row"><span class="next-key">Treffpunkt</span><span class="next-val">Tiroler Stuben</span></div>
+    <div class="next-detail-row"><span class="next-key">Distance</span><span class="next-val">~60 km</span></div>
+    <div class="next-detail-row"><span class="next-key">Format</span><span class="next-val">Race Sim</span></div>
+    <div class="next-detail-row"><span class="next-key">Rider Limit</span><span class="next-val">Offen</span></div>
+    <a href="#" class="join-btn">Strava-Event beitreten</a>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="reveal">
+    <div class="footer-brand">MAD<br><span class="outline">MON</span><br>DAY</div>
+    <div class="footer-sub">Racing — Berlin — Est. 2024</div>
+  </div>
+  <div class="reveal reveal-delay-1">
+    <div class="footer-col-title">Navigate</div>
+    <ul class="footer-links">
+      <li><a href="#">Rides</a></li><li><a href="#">Route</a></li><li><a href="#">Kit</a></li><li><a href="#">Results</a></li><li><a href="#">About</a></li>
+    </ul>
+  </div>
+  <div class="reveal reveal-delay-2">
+    <div class="footer-col-title">Connect</div>
+    <ul class="footer-links">
+      <li><a href="#">Strava</a></li><li><a href="#">Instagram</a></li><li><a href="#">WhatsApp</a></li>
+    </ul>
+    <div style="margin-top:40px;"><div class="footer-col-title">Location</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:300;text-transform:uppercase;opacity:.5;line-height:1.6;">Grunewald<br>Wannsee<br>Berlin</div></div>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <span>© 2026 Mad Monday Racing</span>
+  <span>No sponsors. No excuses.</span>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// CURSOR
+// ════════════════════════════════════════
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => {
+  mx=e.clientX; my=e.clientY;
+  cursor.style.left=(mx-4)+'px'; cursor.style.top=(my-4)+'px';
+});
+(function animR(){
+  rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+  ring.style.left=(rx-16)+'px'; ring.style.top=(ry-16)+'px';
+  requestAnimationFrame(animR);
+})();
+
+// ════════════════════════════════════════
+// COUNTDOWN
+// ════════════════════════════════════════
+function updateCountdown() {
+  const now = new Date();
+  const day = now.getDay();
+  const daysUntilMon = day===1 && now.getHours()<18 ? 0 : (8-day)%7||7;
+  const nextMon = new Date(now);
+  nextMon.setDate(now.getDate()+daysUntilMon);
+  nextMon.setHours(18,0,0,0);
+  const diff = nextMon - now;
+  const d=Math.floor(diff/86400000), h=Math.floor((diff%86400000)/3600000),
+        m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
+  const pad = n=>String(n).padStart(2,'0');
+  document.getElementById('countdown').innerHTML=
+    `${pad(d)}<span>d </span>${pad(h)}<span>h </span>${pad(m)}<span>m </span>${pad(s)}<span>s</span>`;
+}
+updateCountdown(); setInterval(updateCountdown,1000);
+
+// ════════════════════════
+// ECHTE GPX-ROUTE (Komoot)
+// 877 GPS-Punkte, Turnaround idx 499
+// ════════════════════════
+// ════════════
+// GPX-ROUTE (Komoot) — 877 Punkte, single track, corrected DPs
+// ════════════
+const routeMap = L.map('routeMap', {
+  center: [52.460, 13.160], zoom: 12,
+  zoomControl: true, scrollWheelZoom: false,
+});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  subdomains:'abcd', maxZoom:19,
+}).addTo(routeMap);
+
+const GPX_ROUTE = [
+  [52.506353,13.228208],[52.506356,13.228334],[52.506365,13.228480],[52.506297,13.228491],[52.505195,13.228670],[52.505141,13.228679],[52.505086,13.228685],[52.504860,13.228709],[52.504643,13.228687],[52.504266,13.228574],[52.504216,13.228553],[52.503951,13.228374],[52.503625,13.228013],[52.502688,13.226386],[52.501745,13.224728],[52.501466,13.224353],[52.500562,13.223227],[52.500442,13.223020],[52.500283,13.222608],[52.500186,13.222004],[52.500181,13.221770],[52.500205,13.221476],[52.500421,13.220062],[52.500427,13.219409],[52.500402,13.219100],[52.500340,13.218762],[52.500096,13.217785],[52.499962,13.217033],[52.499915,13.216388],[52.499913,13.215787],[52.499935,13.215483],[52.500248,13.212980],[52.500410,13.212031],[52.500597,13.211262],[52.500798,13.210491],[52.500845,13.210308],[52.500957,13.209852],[52.500925,13.209787],[52.500439,13.208944],[52.500382,13.208828],[52.500051,13.208156],[52.499502,13.206913],[52.498948,13.206004],[52.498730,13.205692],[52.498089,13.204909],[52.497677,13.204317],[52.497213,13.203437],[52.496794,13.202518],[52.496198,13.201178],[52.495884,13.200565],[52.495556,13.200083],[52.495397,13.199941],[52.495274,13.199882],[52.495088,13.199894],[52.494732,13.200085],[52.494213,13.200561],[52.494060,13.200748],[52.493779,13.201127],[52.493152,13.202284],[52.492694,13.203177],
+  [52.492499,13.203520],[52.492294,13.203752],[52.492130,13.203877],[52.491375,13.204190],[52.489629,13.204880],[52.489383,13.204944],[52.489122,13.204864],[52.488906,13.204669],[52.486736,13.201878],[52.485811,13.200683],[52.485699,13.200463],[52.485599,13.200178],[52.485543,13.199951],[52.485391,13.198410],[52.485342,13.197891],[52.485276,13.197575],[52.485081,13.197102],[52.484977,13.197020],[52.484372,13.196840],[52.483272,13.196879],[52.480185,13.197407],[52.479444,13.197547],[52.479130,13.197637],[52.478682,13.197835],[52.478622,13.197861],[52.477751,13.198251],[52.477086,13.198439],[52.475139,13.199049],[52.473704,13.199316],[52.470781,13.200103],[52.469811,13.200350],[52.469540,13.200294],[52.469452,13.200212],[52.469339,13.200003],[52.469127,13.199085],[52.469093,13.198658],[52.469057,13.197898],[52.469042,13.197774],[52.468977,13.197553],[52.468751,13.197077],[52.468599,13.196889],[52.468254,13.196656],[52.467697,13.196587],[52.465906,13.196542],[52.465638,13.196424],[52.465384,13.196233],[52.465117,13.195886],[52.464918,13.195572],[52.464768,13.195307],[52.464257,13.194254],[52.463449,13.192502],[52.463211,13.192091],[52.463016,13.191854],[52.462743,13.191614],[52.462504,13.191454],[52.461817,13.191184],[52.460493,13.190806],[52.459807,13.190671],[52.459162,13.190497],[52.458693,13.190316],
+  [52.457946,13.189879],[52.457466,13.189638],[52.455901,13.189234],[52.455551,13.189176],[52.455186,13.189220],[52.455076,13.189292],[52.454911,13.189514],[52.454688,13.190022],[52.454566,13.190307],[52.454396,13.190650],[52.454120,13.190940],[52.452200,13.192227],[52.451398,13.192804],[52.451290,13.192901],[52.451177,13.193016],[52.450790,13.193437],[52.449991,13.194456],[52.449036,13.195688],[52.448850,13.195892],[52.448748,13.195984],[52.447588,13.196674],[52.445603,13.197797],[52.444764,13.198271],[52.441226,13.200219],[52.441135,13.200230],[52.440952,13.200003],[52.440490,13.199446],[52.440237,13.199127],[52.439180,13.197795],[52.437809,13.196068],[52.437179,13.195259],[52.436464,13.194325],[52.436123,13.193761],[52.435384,13.192377],[52.435302,13.192223],[52.435239,13.192103],[52.434696,13.191077],[52.434643,13.190977],[52.434618,13.190929],[52.434542,13.190789],[52.434458,13.190632],[52.434144,13.190049],[52.434044,13.189862],[52.433929,13.189617],[52.433903,13.189567],[52.433857,13.189481],[52.433907,13.189374],[52.433945,13.189294],[52.433933,13.189178],[52.434057,13.188954],[52.434204,13.188562],[52.435119,13.186128],[52.435704,13.184883],[52.436270,13.183680],[52.437011,13.182118],[52.437149,13.181886],[52.437281,13.181746],[52.437440,13.181647],[52.437546,13.181603],[52.438634,13.181512],
+  [52.439558,13.181449],[52.440499,13.181351],[52.441231,13.181295],[52.441995,13.181230],[52.442526,13.181066],[52.442794,13.180922],[52.443156,13.180649],[52.443508,13.180261],[52.443775,13.179835],[52.444023,13.179378],[52.444869,13.177040],[52.444989,13.176710],[52.445201,13.176127],[52.445340,13.175651],[52.445385,13.175464],[52.445448,13.174926],[52.445536,13.174160],[52.445768,13.173163],[52.445870,13.172821],[52.446333,13.171734],[52.446399,13.171466],[52.446419,13.171045],[52.446481,13.170662],[52.446579,13.170281],[52.446716,13.170087],[52.446824,13.170006],[52.447233,13.169862],[52.447888,13.169788],[52.448107,13.169848],[52.448729,13.170109],[52.448923,13.170140],[52.449064,13.170110],[52.449252,13.169929],[52.449368,13.169631],[52.449418,13.169215],[52.449414,13.169012],[52.449414,13.168992],[52.449380,13.168832],[52.449328,13.168706],[52.449168,13.168516],[52.448852,13.168372],[52.448604,13.168305],[52.448439,13.168261],[52.447945,13.168207],[52.447428,13.168267],[52.447033,13.168425],[52.446824,13.168570],[52.446700,13.168683],[52.446594,13.168855],[52.446468,13.169143],[52.446418,13.169386],[52.446387,13.169628],[52.446393,13.170361],[52.446419,13.170765],[52.446419,13.170876],[52.446419,13.171045],[52.446399,13.171466],[52.446333,13.171734],[52.445870,13.172821],[52.445768,13.173163],
+  [52.445536,13.174160],[52.445448,13.174926],[52.445385,13.175464],[52.445340,13.175651],[52.445201,13.176127],[52.444989,13.176710],[52.444869,13.177040],[52.444023,13.179378],[52.443775,13.179835],[52.443508,13.180261],[52.443156,13.180649],[52.442794,13.180922],[52.442526,13.181066],[52.441995,13.181230],[52.441231,13.181295],[52.440499,13.181351],[52.439558,13.181449],[52.438634,13.181512],[52.437546,13.181603],[52.437440,13.181647],[52.437281,13.181746],[52.437149,13.181886],[52.437011,13.182118],[52.436270,13.183680],[52.435704,13.184883],[52.435119,13.186128],[52.434204,13.188562],[52.434057,13.188954],[52.433933,13.189178],[52.433906,13.189228],[52.433871,13.189296],[52.433816,13.189400],[52.433771,13.189313],[52.433711,13.189198],[52.433692,13.189162],[52.433131,13.188104],[52.432602,13.187292],[52.432396,13.186977],[52.432201,13.186676],[52.431750,13.186010],[52.431397,13.185580],[52.431013,13.185299],[52.430887,13.185239],[52.430366,13.185113],[52.429476,13.184971],[52.429017,13.185000],[52.428957,13.185012],[52.428274,13.185282],[52.427900,13.185519],[52.427590,13.185784],[52.427293,13.186039],[52.427180,13.186135],[52.427068,13.186228],[52.426606,13.186608],[52.426205,13.186744],[52.425928,13.186725],[52.425677,13.186619],[52.425580,13.186558],[52.425461,13.186464],[52.425052,13.185976],
+  [52.424712,13.185504],[52.424463,13.185119],[52.423976,13.184127],[52.423765,13.183686],[52.423532,13.183256],[52.423178,13.182651],[52.422823,13.181971],[52.422237,13.180857],[52.422108,13.180583],[52.421946,13.180058],[52.421963,13.179975],[52.421928,13.179590],[52.421893,13.179459],[52.421752,13.178934],[52.421677,13.178646],[52.421624,13.178438],[52.421598,13.178335],[52.421555,13.178179],[52.421432,13.177709],[52.421328,13.177348],[52.421229,13.177031],[52.421135,13.176758],[52.421051,13.176559],[52.420818,13.176153],[52.420477,13.175745],[52.420207,13.175480],[52.420121,13.175393],[52.420106,13.175334],[52.420085,13.175245],[52.420110,13.175183],[52.420122,13.175150],[52.420154,13.175071],[52.420369,13.174394],[52.420659,13.173350],[52.420820,13.172524],[52.420866,13.171862],[52.420911,13.171041],[52.420873,13.170791],[52.420868,13.170507],[52.420727,13.169039],[52.420686,13.168664],[52.420637,13.168203],[52.420617,13.168019],[52.420587,13.167729],[52.420558,13.167455],[52.420544,13.167324],[52.420526,13.167167],[52.420504,13.166987],[52.420404,13.166286],[52.420302,13.165494],[52.420058,13.163624],[52.420041,13.163483],[52.419932,13.162521],[52.419874,13.162005],[52.419846,13.161747],[52.419827,13.161585],[52.419807,13.161411],[52.419759,13.160993],[52.419698,13.160453],[52.419682,13.160313],
+  [52.419667,13.160183],[52.419614,13.159729],[52.419592,13.159538],[52.419576,13.159402],[52.419562,13.159281],[52.419510,13.158825],[52.419489,13.158641],[52.419422,13.158062],[52.419395,13.157830],[52.419357,13.157500],[52.419334,13.157302],[52.419253,13.156595],[52.419235,13.156436],[52.419218,13.156284],[52.419043,13.154717],[52.419030,13.154600],[52.418896,13.153269],[52.418865,13.152957],[52.418949,13.152921],[52.418981,13.152907],[52.419222,13.152679],[52.419770,13.152159],[52.420358,13.151724],[52.420726,13.151492],[52.421448,13.151157],[52.422455,13.150666],[52.422823,13.150420],[52.423295,13.150048],[52.423780,13.149595],[52.424149,13.149168],[52.424503,13.148697],[52.425184,13.147602],[52.425560,13.146812],[52.425891,13.145907],[52.426113,13.144943],[52.426218,13.144577],[52.426363,13.143446],[52.426404,13.142887],[52.426424,13.142115],[52.426402,13.141668],[52.426322,13.140553],[52.426224,13.139891],[52.426110,13.139329],[52.425927,13.138630],[52.425700,13.137911],[52.425513,13.137192],[52.425380,13.136486],[52.425321,13.135900],[52.425296,13.135264],[52.425311,13.134644],[52.425353,13.134125],[52.425449,13.133516],[52.425673,13.132450],[52.425974,13.131443],[52.426620,13.129774],[52.427233,13.128352],[52.427932,13.127065],[52.428060,13.126720],[52.428215,13.126084],[52.428259,13.125618],
+  [52.428246,13.124548],[52.428152,13.124216],[52.428049,13.124068],[52.428031,13.124033],[52.427527,13.123042],[52.427202,13.122547],[52.426420,13.121421],[52.425078,13.119469],[52.424582,13.118994],[52.424428,13.118751],[52.424168,13.118139],[52.423632,13.116880],[52.423563,13.116712],[52.423526,13.116622],[52.423231,13.115918],[52.423129,13.115782],[52.423006,13.115660],[52.422136,13.115002],[52.421927,13.114904],[52.421434,13.114775],[52.421296,13.114746],[52.421118,13.114615],[52.421374,13.113819],[52.421764,13.112652],[52.421865,13.112461],[52.422199,13.111983],[52.422298,13.111708],[52.422318,13.111533],[52.422313,13.110967],[52.422248,13.110495],[52.422147,13.110055],[52.421854,13.109350],[52.421784,13.109170],[52.421679,13.108730],[52.421648,13.107848],[52.421644,13.107516],[52.421703,13.107041],[52.421721,13.106849],[52.421731,13.106689],[52.421734,13.106393],[52.421746,13.105481],[52.421836,13.104959],[52.421906,13.104865],[52.422189,13.104822],[52.422288,13.104776],[52.422563,13.104561],[52.422764,13.104348],[52.423106,13.103658],[52.423271,13.103209],[52.423345,13.102925],[52.423404,13.102568],[52.423404,13.102374],[52.423334,13.101557],[52.423370,13.100463],[52.423359,13.100331],[52.423348,13.100206],[52.423289,13.100040],[52.423041,13.099803],[52.422946,13.099712],[52.422601,13.099448],
+  [52.422274,13.099254],[52.421349,13.098871],[52.421084,13.098759],[52.420771,13.098554],[52.420156,13.098245],[52.419818,13.098022],[52.419716,13.097900],[52.419209,13.097062],[52.418883,13.096709],[52.418232,13.095850],[52.417953,13.095551],[52.417155,13.094784],[52.416666,13.094261],[52.415610,13.093280],[52.414554,13.092463],[52.414115,13.092168],[52.413568,13.091871],[52.413522,13.091604],[52.413522,13.091329],[52.413524,13.090131],[52.413522,13.091329],[52.413522,13.091604],[52.413568,13.091871],[52.414115,13.092168],[52.414554,13.092463],[52.415610,13.093280],[52.416666,13.094261],[52.417155,13.094784],[52.417953,13.095551],[52.418232,13.095850],[52.418883,13.096709],[52.419209,13.097062],[52.419716,13.097900],[52.419818,13.098022],[52.420156,13.098245],[52.420771,13.098554],[52.421084,13.098759],[52.421349,13.098871],[52.422274,13.099254],[52.422601,13.099448],[52.422946,13.099712],[52.423289,13.100040],[52.423348,13.100206],[52.423359,13.100331],[52.423370,13.100463],[52.423334,13.101557],[52.423404,13.102374],[52.423404,13.102568],[52.423398,13.102606],[52.423345,13.102925],[52.423271,13.103209],[52.423106,13.103658],[52.422764,13.104348],[52.422563,13.104561],[52.422288,13.104776],[52.422189,13.104822],[52.421906,13.104865],[52.421836,13.104959],[52.421746,13.105481],[52.421734,13.106393],
+  [52.421731,13.106689],[52.421721,13.106849],[52.421703,13.107041],[52.421644,13.107516],[52.421648,13.107848],[52.421679,13.108730],[52.421784,13.109170],[52.421854,13.109350],[52.422147,13.110055],[52.422248,13.110495],[52.422313,13.110967],[52.422318,13.111533],[52.422298,13.111708],[52.422199,13.111983],[52.421865,13.112461],[52.421764,13.112652],[52.421374,13.113819],[52.421118,13.114615],[52.420947,13.114406],[52.420879,13.114272],[52.420686,13.113279],[52.420436,13.112379],[52.420320,13.112057],[52.420208,13.111856],[52.419693,13.111228],[52.419317,13.110997],[52.418936,13.110482],[52.418565,13.109915],[52.418495,13.109766],[52.418402,13.109433],[52.418341,13.109313],[52.418245,13.109211],[52.416839,13.108481],[52.416536,13.108420],[52.416295,13.108491],[52.415593,13.108879],[52.415376,13.108917],[52.414124,13.109232],[52.414060,13.109246],[52.413992,13.109258],[52.414060,13.109849],[52.414239,13.112474],[52.415253,13.123015],[52.415571,13.125997],[52.416596,13.135110],[52.416755,13.136244],[52.416992,13.137619],[52.417191,13.138770],[52.417224,13.138955],[52.417328,13.139547],[52.417518,13.140780],[52.417673,13.142116],[52.417718,13.142941],[52.417733,13.143078],[52.417771,13.143426],[52.417951,13.145087],[52.417967,13.145233],[52.418158,13.146986],[52.418208,13.147446],[52.418244,13.147776],
+  [52.418274,13.148037],[52.418352,13.148741],[52.418542,13.150493],[52.418556,13.150635],[52.418684,13.151936],[52.418746,13.152568],[52.418754,13.152650],[52.418787,13.152983],[52.418816,13.153290],[52.418924,13.154335],[52.419039,13.155406],[52.419114,13.156061],[52.419142,13.156305],[52.419159,13.156456],[52.419177,13.156617],[52.419250,13.157263],[52.419257,13.157323],[52.419266,13.157401],[52.419397,13.158586],[52.419407,13.158670],[52.419427,13.158848],[52.419447,13.159016],[52.419495,13.159430],[52.419511,13.159567],[52.419586,13.160211],[52.419601,13.160348],[52.419616,13.160479],[52.419674,13.160983],[52.419726,13.161436],[52.419745,13.161611],[52.419764,13.161770],[52.419774,13.161849],[52.419852,13.162530],[52.419964,13.163507],[52.419982,13.163649],[52.420285,13.165980],[52.420416,13.167014],[52.420437,13.167193],[52.420455,13.167350],[52.420470,13.167480],[52.420521,13.167890],[52.420790,13.170485],[52.420793,13.170764],[52.420753,13.171019],[52.420710,13.171839],[52.420688,13.172070],[52.420519,13.172941],[52.420300,13.173770],[52.420188,13.174127],[52.420160,13.174198],[52.419886,13.174967],[52.419863,13.175042],[52.419774,13.175337],[52.419786,13.175348],[52.419826,13.175385],[52.419926,13.175477],[52.419978,13.175524],[52.420035,13.175529],[52.420070,13.175532],[52.420159,13.175618],
+  [52.420767,13.176242],[52.420899,13.176463],[52.420983,13.176640],[52.421079,13.176878],[52.421232,13.177410],[52.421293,13.177639],[52.421445,13.178206],[52.421501,13.178416],[52.421556,13.178623],[52.421651,13.178978],[52.421797,13.179532],[52.421827,13.179657],[52.421895,13.179994],[52.421946,13.180058],[52.422108,13.180583],[52.422237,13.180857],[52.422823,13.181971],[52.423178,13.182651],[52.423532,13.183256],[52.423765,13.183686],[52.423976,13.184127],[52.424463,13.185119],[52.424712,13.185504],[52.425052,13.185976],[52.425461,13.186464],[52.425580,13.186558],[52.425677,13.186619],[52.425928,13.186725],[52.426205,13.186744],[52.426606,13.186608],[52.427068,13.186228],[52.427180,13.186135],[52.427293,13.186039],[52.427590,13.185784],[52.427900,13.185519],[52.428274,13.185282],[52.428957,13.185012],[52.429017,13.185000],[52.429476,13.184971],[52.430366,13.185113],[52.430887,13.185239],[52.431013,13.185299],[52.431397,13.185580],[52.431750,13.186010],[52.432201,13.186676],[52.432396,13.186977],[52.432602,13.187292],[52.433131,13.188104],[52.433692,13.189162],[52.433711,13.189198],[52.433771,13.189313],[52.433816,13.189400],[52.433857,13.189481],[52.433903,13.189567],[52.433929,13.189617],[52.434044,13.189862],[52.434144,13.190049],[52.434458,13.190632],[52.434542,13.190789],[52.434618,13.190929],
+  [52.434696,13.191077],[52.435239,13.192103],[52.435302,13.192223],[52.435384,13.192377],[52.436123,13.193761],[52.436464,13.194325],[52.437179,13.195259],[52.437809,13.196068],[52.439180,13.197795],[52.440237,13.199127],[52.440490,13.199446],[52.440952,13.200003],[52.441135,13.200230],[52.441226,13.200219],[52.444764,13.198271],[52.445603,13.197797],[52.447588,13.196674],[52.448748,13.195984],[52.448850,13.195892],[52.449036,13.195688],[52.449991,13.194456],[52.450790,13.193437],[52.451177,13.193016],[52.451290,13.192901],[52.451398,13.192804],[52.452200,13.192227],[52.454120,13.190940],[52.454396,13.190650],[52.454566,13.190307],[52.454688,13.190022],[52.454911,13.189514],[52.455076,13.189292],[52.455186,13.189220],[52.455551,13.189176],[52.455901,13.189234],[52.457466,13.189638],[52.457946,13.189879],[52.458693,13.190316],[52.459162,13.190497],[52.459807,13.190671],[52.460493,13.190806],[52.461817,13.191184],[52.462504,13.191454],[52.462743,13.191614],[52.463016,13.191854],[52.463211,13.192091],[52.463449,13.192502],[52.464257,13.194254],[52.464768,13.195307],[52.464918,13.195572],[52.465117,13.195886],[52.465384,13.196233],[52.465638,13.196424],[52.465906,13.196542],[52.467697,13.196587],[52.468254,13.196656],[52.468599,13.196889],[52.468751,13.197077],[52.468977,13.197553],[52.469042,13.197774],
+  [52.469057,13.197898],[52.469093,13.198658],[52.469127,13.199085],[52.469339,13.200003],[52.469452,13.200212],[52.469540,13.200294],[52.469811,13.200350],[52.470781,13.200103],[52.473704,13.199316],[52.475139,13.199049],[52.477086,13.198439],[52.477751,13.198251],[52.478622,13.197861],[52.478682,13.197835],[52.479130,13.197637],[52.479444,13.197547],[52.480185,13.197407],[52.483272,13.196879],[52.484372,13.196840],[52.484977,13.197020],[52.485081,13.197102],[52.485276,13.197575],[52.485342,13.197891],[52.485391,13.198410],[52.485543,13.199951],[52.485599,13.200178],[52.485699,13.200463],[52.485811,13.200683],[52.486736,13.201878],[52.488906,13.204669],[52.489122,13.204864],[52.489383,13.204944],[52.489629,13.204880],[52.491375,13.204190],[52.492130,13.203877],[52.492294,13.203752],[52.492499,13.203520],[52.492694,13.203177],[52.493152,13.202284],[52.493779,13.201127],[52.494060,13.200748],[52.494213,13.200561],[52.494732,13.200085],[52.495088,13.199894],[52.495274,13.199882],[52.495397,13.199941],[52.495556,13.200083],[52.495884,13.200565],[52.496198,13.201178],[52.496794,13.202518],[52.497213,13.203437],[52.497677,13.204317],[52.498089,13.204909],[52.498730,13.205692],[52.498948,13.206004],[52.499502,13.206913],[52.500051,13.208156],[52.500382,13.208828],[52.500439,13.208944],[52.500925,13.209787],
+  [52.500957,13.209852],[52.500845,13.210308],[52.500798,13.210491],[52.500597,13.211262],[52.500410,13.212031],[52.500248,13.212980],[52.499935,13.215483],[52.499913,13.215787],[52.499915,13.216388],[52.499962,13.217033],[52.500096,13.217785],[52.500340,13.218762],[52.500402,13.219100],[52.500427,13.219409],[52.500421,13.220062],[52.500205,13.221476],[52.500181,13.221770],[52.500186,13.222004],[52.500283,13.222608],[52.500442,13.223020],[52.500562,13.223227],[52.501466,13.224353],[52.501745,13.224728],[52.502688,13.226386],[52.503625,13.228013],[52.503951,13.228374],[52.504216,13.228553],[52.504266,13.228574],[52.504643,13.228687],[52.504860,13.228709],[52.505086,13.228685],[52.505141,13.228679],[52.505195,13.228670],[52.506297,13.228491],[52.506365,13.228480],[52.506356,13.228334],[52.506353,13.228208]
+];
+const GPX_ELEV = [65.1,63.4,51.5,45.0,39.5,36.3,39.5,41.1,45.3,57.4,53.5,52.9,75.3,38.1,36.5,38.1,37.9,35.2,33.6,45.8,54.5,43.9,43.4,43.3,43.5,47.2,47.6,44.4,33.4,41.2,41.8,40.7,42.3,40.6,34.7,35.7,48.0,47.2,42.6,41.4,35.0,35.4,37.3,38.8,40.2,39.4,37.4,34.9,34.5,41.4,47.3,46.3,44.9,42.3,41.4,50.2,65.3,64.7,65.3,54.9,45.0,61.2,67.0,67.8,56.8,44.3,39.7,35.6,33.0,34.5,35.3,31.6,32.9,36.0,32.7,34.0,37.7,42.3,49.3,60.7,76.9,80.2,67.6,62.8,56.2,46.6,42.4,40.2,42.8,45.1,46.8,42.4,32.1,35.2,36.2,39.0,40.1,39.1,37.8,35.9,34.5,40.0,42.5,43.4,43.0,54.1,46.7,34.1,34.9,37.3,38.5,35.6,38.2,73.5,53.8,53.0,60.5,46.4,41.1,39.6,36.6,39.1,43.5,50.6,61.8,61.8];
+
+const lOut = L.polyline(GPX_ROUTE, {
+  color:'#D2C5B1', weight:2.5, opacity:.88,
+  lineCap:'round', lineJoin:'round'
+}).addTo(routeMap);
+const lRet = L.polyline([], { color:'#D2C5B1', weight:0 });
+
+routeMap.fitBounds(L.latLngBounds(GPX_ROUTE).pad(0.06));
+
+const iconSF = L.divIcon({ className:'', html:'<div style="width:13px;height:13px;background:#D2C5B1;border:2px solid #1A1714;border-radius:50%;box-shadow:0 0 0 2px #D2C5B1,0 0 16px rgba(210,197,177,.4);"></div>', iconSize:[13,13], iconAnchor:[6,6] });
+const iconDP = L.divIcon({ className:'', html:'<div style="width:12px;height:12px;border:2px solid #E8A830;border-radius:50%;background:rgba(232,168,48,.12);box-shadow:0 0 0 1px rgba(232,168,48,.5),0 0 12px rgba(232,168,48,.3);"></div>', iconSize:[12,12], iconAnchor:[6,6] });
+
+const PT_START = [52.506353, 13.228208];
+const PT_DP12  = [52.441226, 13.200219]; // Havelchaussee / Wannseebadweg
+const PT_DP3   = [52.433861, 13.189361]; // Glienicker Brücke (verified)
+
+L.marker(PT_START, {icon:iconSF, zIndexOffset:100})
+  .bindPopup('<div class="popup-label">Start / Finish</div><div class="popup-title">Tiroler Stuben</div><div class="popup-detail">Heerstraße 137 · Berlin<br>18:00 Uhr — jeden Montag</div>')
+  .addTo(routeMap);
+
+const dpGroup = L.layerGroup();
+L.marker(PT_DP12, {icon:iconDP})
+  .bindPopup('<div class="popup-label">Drop Point 1</div><div class="popup-title">Havelchaussee /<br>Wannseebadweg</div><div class="popup-detail">Warten · dann Inselrunde</div><div class="popup-badge">⬡ DP1 — Vor Insel</div>')
+  .addTo(dpGroup);
+L.marker(PT_DP12, {icon:iconDP})
+  .bindPopup('<div class="popup-label">Drop Point 2</div><div class="popup-title">Havelchaussee /<br>Wannseebadweg</div><div class="popup-detail">Sammeln nach Inselrunde</div><div class="popup-badge">⬡ DP2 — Nach Insel</div>')
+  .addTo(dpGroup);
+L.marker(PT_DP3, {icon:iconDP})
+  .bindPopup('<div class="popup-label">Drop Point 3</div><div class="popup-title">Glienicker Brücke</div><div class="popup-detail">Wenden · Rückweg<br>Moorlakeweg → Königsstraße</div><div class="popup-badge">⬡ Umkehrstopp</div>')
+  .addTo(dpGroup);
+dpGroup.addTo(routeMap);
+
+const layerState = { out:true, ret:true, dps:true, isl:true };
+function toggleLayer(id) {
+  layerState[id] = !layerState[id];
+  document.getElementById('tog-'+id).classList.toggle('on', layerState[id]);
+  if (id==='out') { layerState[id] ? lOut.addTo(routeMap) : routeMap.removeLayer(lOut); }
+  if (id==='ret') { routeMap.flyTo([52.4484, 13.1695], 15, {duration:1.2}); }
+  if (id==='dps') { layerState[id] ? dpGroup.addTo(routeMap) : routeMap.removeLayer(dpGroup); }
+  if (id==='isl') { routeMap.flyTo(PT_DP12, 15, {duration:1.2}); }
+}
+
+const flyTargets = [
+  [PT_START,15], [[52.488,13.202],13], [PT_DP12,15],
+  [[52.4484,13.1695],15], [PT_DP12,15], [[52.423,13.150],13],
+  [PT_DP3,14], [[52.435,13.185],13], [PT_START,15],
+];
+document.querySelectorAll('.rstep').forEach(el => {
+  el.addEventListener('click', () => {
+    const [c,z] = flyTargets[+el.dataset.fly];
+    routeMap.flyTo(c, z, {duration:1.3});
+  });
+});
+
+const esvg = document.getElementById('elevMiniSvg');
+const eW=256, eH=64;
+// Echtes Höhenprofil direkt aus GPX-Daten (Komoot)
+const rawE = GPX_ELEV;
+
+const eMin=Math.min(...rawE), eMax=Math.max(...rawE);
+const ex=i=>(i/(rawE.length-1))*eW, ey=v=>eH-2-((v-eMin)/(eMax-eMin))*(eH-8);
+
+const eDefs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+const eGrad=document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+eGrad.id='eg';eGrad.setAttribute('x1','0');eGrad.setAttribute('x2','0');eGrad.setAttribute('y1','0');eGrad.setAttribute('y2','1');
+[['0','rgba(210,197,177,0.22)'],['1','rgba(210,197,177,0)']].forEach(([o,c])=>{
+  const s=document.createElementNS('http://www.w3.org/2000/svg','stop');
+  s.setAttribute('offset',o);s.setAttribute('stop-color',c);eGrad.appendChild(s);
+});
+eDefs.appendChild(eGrad);esvg.appendChild(eDefs);
+
+const ePts=rawE.map((v,i)=>`${ex(i)},${ey(v)}`).join(' ');
+const eArea=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+eArea.setAttribute('points',`0,${eH} `+ePts+` ${eW},${eH}`);
+eArea.setAttribute('fill','url(#eg)');esvg.appendChild(eArea);
+
+const eLine=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+eLine.setAttribute('points',ePts);eLine.setAttribute('fill','none');
+eLine.setAttribute('stroke','#D2C5B1');eLine.setAttribute('stroke-width','1.2');
+eLine.setAttribute('stroke-linejoin','round');esvg.appendChild(eLine);
+
+// DP verticals on elevation
+[18,22,38].forEach(idx=>{
+  const vl=document.createElementNS('http://www.w3.org/2000/svg','line');
+  const x=ex(Math.round(idx/60*rawE.length));
+  vl.setAttribute('x1',x);vl.setAttribute('x2',x);vl.setAttribute('y1',0);vl.setAttribute('y2',eH);
+  vl.setAttribute('stroke','#E8A830');vl.setAttribute('stroke-width','.8');
+  vl.setAttribute('stroke-dasharray','2,3');vl.setAttribute('opacity','.5');
+  esvg.appendChild(vl);
+});
+
+const elevMini=document.getElementById('elevMini');
+const elevCur=document.getElementById('elevCur');
+const elevTip=document.getElementById('elevTip');
+elevMini.addEventListener('mousemove',e=>{
+  const r=elevMini.getBoundingClientRect();
+  const xRel=(e.clientX-r.left)/r.width;
+  const idx=Math.min(rawE.length-1,Math.max(0,Math.round(xRel*(rawE.length-1))));
+  elevCur.style.left=(xRel*100)+'%'; elevCur.style.opacity='1';
+  elevTip.style.opacity='1';
+  elevTip.style.left=Math.min(xRel*100,68)+'%';
+  elevTip.textContent=`${rawE[idx]+30}m · ${Math.round(xRel*60)}km`;
+});
+elevMini.addEventListener('mouseleave',()=>{ elevCur.style.opacity='0'; elevTip.style.opacity='0'; });
+
+// ════════════════════════════════════════
+// POWER CHART
+// ════════════════════════════════════════
+const chartSvg=document.getElementById('powerChart');
+const cTip=document.getElementById('chartTooltip');
+const cTipPow=document.getElementById('tooltipPower');
+const CW=1200,CH=240;
+const pwrData=[];
+let base=200;
+for(let i=0;i<120;i++){
+  base+=(Math.random()-.48)*40; base=Math.max(80,Math.min(450,base));
+  if(Math.random()<.05) base=Math.min(500,base+150);
+  pwrData.push(Math.round(base));
+}
+const maxP=Math.max(...pwrData),minP=Math.min(...pwrData);
+const cPts=pwrData.map((v,i)=>`${(i/(pwrData.length-1))*CW},${CH-((v-minP)/(maxP-minP))*(CH-20)-10}`).join(' ');
+const cArea=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+cArea.setAttribute('points',`0,${CH} `+cPts+` ${CW},${CH}`);cArea.setAttribute('fill','rgba(210,197,177,.05)');chartSvg.appendChild(cArea);
+[.25,.5,.75].forEach(f=>{
+  const y=CH-f*(CH-20)-10;
+  const gl=document.createElementNS('http://www.w3.org/2000/svg','line');
+  gl.setAttribute('x1',0);gl.setAttribute('x2',CW);gl.setAttribute('y1',y);gl.setAttribute('y2',y);
+  gl.setAttribute('stroke','rgba(210,197,177,.06)');gl.setAttribute('stroke-width',1);chartSvg.appendChild(gl);
+  const wv=Math.round(minP+f*(maxP-minP));
+  const wl=document.createElementNS('http://www.w3.org/2000/svg','text');
+  wl.setAttribute('x',8);wl.setAttribute('y',y-4);wl.setAttribute('fill','rgba(210,197,177,.25)');
+  wl.setAttribute('font-family','Space Mono,monospace');wl.setAttribute('font-size',8);wl.textContent=`${wv}w`;chartSvg.appendChild(wl);
+});
+const cLine=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+cLine.setAttribute('points',cPts);cLine.setAttribute('fill','none');cLine.setAttribute('stroke','#D2C5B1');cLine.setAttribute('stroke-width',1.5);cLine.setAttribute('stroke-linejoin','round');chartSvg.appendChild(cLine);
+const cCross=document.createElementNS('http://www.w3.org/2000/svg','line');
+cCross.setAttribute('stroke','rgba(210,197,177,.2)');cCross.setAttribute('stroke-width',1);cCross.setAttribute('y1',0);cCross.setAttribute('y2',CH);cCross.style.display='none';chartSvg.appendChild(cCross);
+const cDot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+cDot.setAttribute('r',4);cDot.setAttribute('fill','#D2C5B1');cDot.setAttribute('stroke','#1A1714');cDot.setAttribute('stroke-width',2);cDot.style.display='none';chartSvg.appendChild(cDot);
+chartSvg.addEventListener('mousemove',e=>{
+  const r=chartSvg.getBoundingClientRect();
+  const xRel=(e.clientX-r.left)/r.width;
+  const idx=Math.round(xRel*(pwrData.length-1));
+  if(idx<0||idx>=pwrData.length) return;
+  const svgX=xRel*CW, svgY=CH-((pwrData[idx]-minP)/(maxP-minP))*(CH-20)-10;
+  cCross.setAttribute('x1',svgX);cCross.setAttribute('x2',svgX);cCross.style.display='block';
+  cDot.setAttribute('cx',svgX);cDot.setAttribute('cy',svgY);cDot.style.display='block';
+  cTipPow.textContent=pwrData[idx];cTip.style.display='block';
+  cTip.style.left=(e.clientX-r.left+16)+'px';cTip.style.top=(e.clientY-r.top-40)+'px';
+});
+chartSvg.addEventListener('mouseleave',()=>{ cCross.style.display='none';cDot.style.display='none';cTip.style.display='none'; });
+
+// ════════════════════════════════════════
+// SCROLL REVEAL
+// ════════════════════════════════════════
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// Trigger Leaflet resize when route section scrolls into view
+const routeObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ routeMap.invalidateSize(); routeObs.disconnect(); }});
+},{threshold:.1});
+routeObs.observe(document.getElementById('route'));
+</script>
+</body>
+</html>
