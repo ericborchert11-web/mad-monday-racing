@@ -315,6 +315,134 @@
   .reveal-delay-1 { transition-delay:.1s; }
   .reveal-delay-2 { transition-delay:.2s; }
   .reveal-delay-3 { transition-delay:.35s; }
+
+  /* ════════════════════════════════════════
+     RESPONSIVE — Tablet ≤ 900px
+  ════════════════════════════════════════ */
+  @media (max-width: 900px) {
+    /* Nav */
+    nav { padding:20px 24px; }
+    .nav-links { display:none; }
+    .nav-cta { display:none; }
+
+    /* Hero */
+    .hero { padding:0 24px 64px; }
+    .hero-meta { flex-wrap:wrap;gap:32px; }
+    .countdown-block { margin-left:0;text-align:left;width:100%; }
+    .title-line { display:none; }
+
+    /* Manifesto */
+    .manifesto { grid-template-columns:1fr;gap:48px;padding:80px 24px; }
+    .manifesto-right { padding-left:0;border-left:none;border-top:1px solid rgba(210,197,177,.15);padding-top:40px; }
+
+    /* Route panel */
+    .route-panel { width:260px; }
+
+    /* Kit */
+    .kit-section { grid-template-columns:1fr;padding:80px 24px; }
+    .kit-section::before { left:24px;right:24px; }
+    .kit-visual { aspect-ratio:3/2; }
+    .kit-info { padding:40px 0;border-left:1px solid rgba(210,197,177,.1);border-top:none;border-left:none; }
+
+    /* Chart */
+    .chart-section { padding:80px 24px; }
+    .chart-section::before { left:24px;right:24px; }
+    .section-header { flex-direction:column;gap:16px; }
+
+    /* Data grid */
+    .data-section { padding:0 24px 80px; }
+    .data-grid { grid-template-columns:repeat(2,1fr); }
+    .data-cell { padding:32px 24px; }
+    .data-cell:nth-child(2) { border-right:none; }
+    .data-cell:nth-child(3) { border-top:1px solid rgba(210,197,177,.1); }
+
+    /* Next ride */
+    .next-ride { grid-template-columns:1fr;gap:48px;padding:80px 24px; }
+    .next-ride::before { left:24px;right:24px; }
+
+    /* Footer */
+    footer { grid-template-columns:1fr 1fr;padding:60px 24px;gap:40px; }
+    .footer-bottom { padding:20px 24px;flex-direction:column;gap:8px; }
+  }
+
+  /* ════════════════════════════════════════
+     RESPONSIVE — Mobile ≤ 600px
+  ════════════════════════════════════════ */
+  @media (max-width: 600px) {
+    /* Global */
+    body { cursor:auto; }
+    .cursor, .cursor-ring { display:none; }
+
+    /* Nav */
+    nav { padding:16px 20px; }
+    .nav-logo { font-size:11px;letter-spacing:.2em; }
+
+    /* Hero */
+    .hero { padding:0 20px 56px;min-height:100svh; }
+    .hero-eyebrow { font-size:8px;letter-spacing:.2em; }
+    .hero-subtitle { margin-bottom:40px; }
+    .hero-meta { gap:24px; }
+    .meta-item .value { font-size:18px; }
+    .countdown-digits { font-size:22px; }
+    .scroll-indicator { display:none; }
+
+    /* Ticker */
+    .ticker-item { font-size:12px;padding:0 32px; }
+
+    /* Manifesto */
+    .manifesto { padding:64px 20px;gap:40px; }
+    .manifesto::after { left:20px;right:20px; }
+    .stats-grid { grid-template-columns:1fr 1fr;gap:24px; }
+    .stat-num { font-size:36px; }
+
+    /* Route section */
+    .route-section { height:auto;min-height:100svh;display:flex;flex-direction:column; }
+    .route-header { position:relative;padding:80px 20px 24px; }
+    #routeMap { height:55vw;min-height:260px;position:relative;flex-shrink:0; }
+    .route-panel {
+      position:relative;top:auto;left:auto;bottom:auto;
+      width:100%;pointer-events:all;
+    }
+    .route-panel-inner { max-height:none; }
+    .route-fade-bottom { display:none; }
+    .map-corner-badge { display:none; }
+
+    /* Kit */
+    .kit-section { padding:64px 20px; }
+    .kit-section::before { left:20px;right:20px; }
+    .kit-name { font-size:48px; }
+    .kit-info { padding:32px 0; }
+    .kit-desc { font-size:13px; }
+
+    /* Chart */
+    .chart-section { padding:64px 20px; }
+    .chart-section::before { left:20px;right:20px; }
+    .chart-wrap { height:180px; }
+    .chart-x-labels span { font-size:7px;letter-spacing:.05em; }
+
+    /* Data grid */
+    .data-section { padding:0 20px 64px; }
+    .data-grid { grid-template-columns:1fr 1fr; }
+    .data-cell { padding:28px 20px; }
+    .data-number { font-size:40px; }
+
+    /* Next ride */
+    .next-ride { padding:64px 20px;gap:40px; }
+    .next-ride::before { left:20px;right:20px; }
+    .next-big { font-size:clamp(52px,15vw,90px); }
+    .next-detail-row { padding:14px 0; }
+
+    /* Footer */
+    footer { grid-template-columns:1fr;padding:48px 20px;gap:40px; }
+    .footer-brand { font-size:36px; }
+    .footer-bottom { padding:16px 20px;flex-direction:column;gap:6px; }
+
+    /* Section dividers */
+    .manifesto::after,
+    .kit-section::before,
+    .chart-section::before,
+    .next-ride::before { left:20px;right:20px; }
+  }
 </style>
 </head>
 <body>
