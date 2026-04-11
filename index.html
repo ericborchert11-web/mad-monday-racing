@@ -1293,7 +1293,6 @@ routeObs.observe(document.getElementById('route'));
   // Keyboard shortcuts
   document.addEventListener('keydown', function onKey(e) {
     if (['Escape','Enter',' '].includes(e.key)) {
-      document.removeEventListener('keydown',
       document.removeEventListener('keydown', onKey);
       closeMMIntro();
     }
@@ -1307,20 +1306,6 @@ function closeMMIntro() {
   overlay.classList.add('exit');
   setTimeout(() => overlay.remove(), 1050);
 }
-
-// ════════════════════════════════════════
-// SCROLL REVEAL
-// ════════════════════════════════════════
-const obs=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
-},{threshold:.12});
-document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
-
-// Leaflet resize on scroll into view
-const routeObs=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{ if(e.isIntersecting){ routeMap.invalidateSize(); routeObs.disconnect(); }});
-},{threshold:.1});
-routeObs.observe(document.getElementById('route'));
 </script>
 </body>
 </html>
