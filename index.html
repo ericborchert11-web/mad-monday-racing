@@ -642,21 +642,141 @@
   }
   .kit-buy-cta:hover { background:var(--light);transform:translateX(4px); }
 
-  @media (max-width:900px) {
-    .kit-buy-inner { grid-template-columns:1fr; }
-    .kit-buy-info { padding:40px 32px;border-left:none;border-top:1px solid rgba(210,197,177,.1); }
-    .sponsor-grid { gap:40px; }
-    .sponsor-section { padding:64px 24px; }
-    .sponsor-section::before { left:24px;right:24px; }
-    .kit-buy-section { padding:64px 24px; }
-    .kit-buy-section::before { left:24px;right:24px; }
+  /* ════════════════════════════════════════
+     RESPONSIVE
+  ════════════════════════════════════════ */
+
+  @media (max-width:1024px) {
+    nav { padding:20px 28px; }
+    .nav-links { gap:24px; }
+    .hero { padding:0 28px 64px; }
+    .section-divider { margin:0 28px; }
+    .manifesto { padding:100px 28px; gap:48px; }
+    .manifesto::after { left:28px;right:28px; }
+    .manifesto-right { padding-left:24px; }
+    .stats-grid { gap:20px; }
+    .route-header { padding:36px 28px 24px; }
+    .route-panel { left:16px;bottom:16px;width:260px; }
+    .map-corner-badge { right:16px;bottom:16px; }
+    .chart-section { padding:80px 28px; }
+    .chart-section::before { left:28px;right:28px; }
+    .data-section { padding:0 28px 80px; }
+    .data-grid { grid-template-columns:repeat(2,1fr); }
+    .data-cell:nth-child(2) { border-right:none; }
+    .data-cell:nth-child(3) { border-top:1px solid rgba(210,197,177,.1); }
+    .next-ride { padding:100px 28px; gap:48px; }
+    .next-ride::before { left:28px;right:28px; }
+    footer { padding:60px 28px; }
+    .footer-bottom { padding:20px 28px; }
+    .kit-section { padding:100px 28px; }
+    .kit-section::before { left:28px;right:28px; }
+    .sponsor-section { padding:80px 28px; }
+    .sponsor-section::before { left:28px;right:28px; }
+    .kit-buy-section { padding:80px 28px; }
+    .kit-buy-section::before { left:28px;right:28px; }
   }
-  @media (max-width:600px) {
-    .sponsor-logo { height:38px; }
+
+  @media (max-width:768px) {
+    /* Nav */
+    nav { padding:16px 20px; }
+    .nav-links { display:none; }
+
+    /* Hero */
+    .hero { padding:0 20px 48px; min-height:100svh; }
+    .hero-meta { flex-wrap:wrap; gap:32px; }
+    .countdown-block { margin-left:0; text-align:left; width:100%; }
+    .hero-number { font-size:38vw; right:-10px; }
+
+    /* Manifesto */
+    .manifesto { grid-template-columns:1fr; padding:80px 20px; gap:48px; }
+    .manifesto::after { left:20px;right:20px; }
+    .manifesto-right { padding-left:0; border-left:none; border-top:1px solid rgba(210,197,177,.1); padding-top:40px; }
+
+    /* Route */
+    .route-section { height:auto; min-height:100svh; }
+    .route-header { padding:24px 20px 20px; }
+    .route-panel { position:relative; top:auto; left:auto; bottom:auto; width:100%; padding:0 20px 20px; }
+    .route-panel-inner { max-height:320px; }
+    #routeMap { position:relative; height:55vw; min-height:280px; }
+    .map-corner-badge { display:none; }
+
+    /* Kit section */
+    .kit-section { grid-template-columns:1fr; padding:80px 20px; gap:0; }
+    .kit-section::before { left:20px;right:20px; }
+    .kit-info { padding:40px 20px; border-top:1px solid rgba(210,197,177,.1); }
+
+    /* Chart */
+    .chart-section { padding:64px 20px; }
+    .chart-section::before { left:20px;right:20px; }
+    .section-header { flex-direction:column; gap:16px; margin-bottom:48px; }
+
+    /* Data grid */
+    .data-section { padding:0 20px 64px; }
+    .data-grid { grid-template-columns:1fr 1fr; }
+    .data-cell { padding:28px 20px; }
+    .data-number { font-size:40px; }
+
+    /* Next ride */
+    .next-ride { grid-template-columns:1fr; padding:80px 20px; gap:40px; }
+    .next-ride::before { left:20px;right:20px; }
+
+    /* Footer */
+    footer { grid-template-columns:1fr; padding:48px 20px; gap:40px; }
+    .footer-bottom { padding:16px 20px; flex-direction:column; gap:8px; }
+
+    /* Kit buy */
+    .kit-buy-section { padding:64px 20px; }
+    .kit-buy-section::before { left:20px;right:20px; }
+    .kit-buy-inner { grid-template-columns:1fr; }
+    .kit-buy-info { padding:32px 20px; border-left:none; border-top:1px solid rgba(210,197,177,.1); }
+    .kit-preview { min-height:320px; }
+
+    /* Sponsor */
+    .sponsor-section { padding:64px 20px; }
+    .sponsor-section::before { left:20px;right:20px; }
     .sponsor-grid { gap:32px; }
-    .kit-buy-info { padding:32px 20px; }
-    .kit-buy-section { padding:48px 20px; }
-    .sponsor-section { padding:48px 20px; }
+    .sponsor-logo { height:36px; }
+
+    /* Section divider */
+    .section-divider { margin:0 20px; }
+
+    /* Intro overlay */
+    .mm-clabel { display:none; }
+    #mm-strip { gap:24px; }
+    .mm-strip-item { font-size:7px; }
+  }
+
+  @media (max-width:480px) {
+    nav { padding:14px 16px; }
+    .nav-logo { font-size:11px; }
+    .hero { padding:0 16px 40px; }
+    .hero-title { letter-spacing:-.03em; }
+    .hero-meta { gap:20px; }
+    .meta-item .value { font-size:18px; }
+    .countdown-digits { font-size:22px; }
+    .manifesto { padding:60px 16px; }
+    .manifesto::after { left:16px;right:16px; }
+    .manifesto-claim { font-size:clamp(36px,13vw,60px); }
+    .chart-section { padding:48px 16px; }
+    .chart-section::before { left:16px;right:16px; }
+    .data-section { padding:0 16px 48px; }
+    .data-grid { grid-template-columns:1fr; }
+    .data-cell { border-right:none; border-top:1px solid rgba(210,197,177,.07); }
+    .data-cell:first-child { border-top:none; }
+    .next-ride { padding:60px 16px; }
+    .next-ride::before { left:16px;right:16px; }
+    footer { padding:40px 16px; }
+    .footer-bottom { padding:14px 16px; }
+    .kit-buy-section { padding:48px 16px; }
+    .kit-buy-section::before { left:16px;right:16px; }
+    .kit-buy-info { padding:28px 16px; }
+    .sponsor-section { padding:48px 16px; }
+    .sponsor-section::before { left:16px;right:16px; }
+    .section-divider { margin:0 16px; }
+    .kit-section { padding:60px 16px; }
+    .kit-section::before { left:16px;right:16px; }
+    .chart-wrap { height:160px; }
+    #mm-strip .mm-strip-item:nth-child(n+3) { display:none; }
   }
 
 </style>
