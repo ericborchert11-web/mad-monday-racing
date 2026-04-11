@@ -528,7 +528,7 @@
     flex-wrap:wrap;gap:64px;margin-top:72px;
   }
   .sponsor-logo {
-    height:36px;opacity:.5;
+    height:56px;opacity:.5;
     filter:brightness(0) invert(1) sepia(0.2) saturate(0.6);
     transition:opacity .3s, filter .3s;
     cursor:none;
@@ -592,7 +592,7 @@
     .kit-buy-section::before { left:24px;right:24px; }
   }
   @media (max-width:600px) {
-    .sponsor-logo { height:24px; }
+    .sponsor-logo { height:38px; }
     .sponsor-grid { gap:32px; }
     .kit-buy-info { padding:32px 20px; }
     .kit-buy-section { padding:48px 20px; }
@@ -708,7 +708,7 @@
   <div class="manifesto-right reveal reveal-delay-2">
     <p class="manifesto-text">Jeden Montag. 18 Uhr. Wer kommt, will fahren. Kein Ausreden, kein Schlendern — das Peloton macht die Arbeit, der Asphalt macht den Rest. Race-simulated training heißt: du verhungerst oder du überlebst.</p>
     <div class="stats-grid">
-      <div class="stat-item"><div class="stat-num">47<span class="stat-unit">+</span></div><div class="stat-label">Rider / Ride</div></div>
+      
       <div class="stat-item"><div class="stat-num">380<span class="stat-unit">m</span></div><div class="stat-label">Elevation</div></div>
       <div class="stat-item"><div class="stat-num">38<span class="stat-unit">km/h</span></div><div class="stat-label">Avg. Speed</div></div>
       <div class="stat-item"><div class="stat-num">52<span class="stat-unit">w</span></div><div class="stat-label">Mon — Season</div></div>
@@ -841,7 +841,7 @@
       <span class="kit-badge">Available — Saison 2026</span>
       <h3 class="kit-buy-title">Race<br>Jersey<br><span class="out">+ Bib</span></h3>
       <p class="kit-buy-desc">
-        Sand auf Asphalt. Kein Sponsor-Branding — nur das MM-Logo und die Berliner Skyline auf dem Rücken. Produziert von AYVA Cycle Culture. Wer trägt, weiß warum er Montags um 18 Uhr am Startpunkt steht.
+        Sand auf Asphalt. Kein Sponsor-Branding — nur das MM-Logo und die Route durch Grunewald und Wannsee auf dem Rücken. Produziert von AYVA Cycle Culture. Wer trägt, weiß warum er Montags um 18 Uhr am Startpunkt steht.
       </p>
       <div class="kit-specs-mini">
         <div class="spec-row"><span class="spec-key">Jersey</span><span class="spec-val">Sand — MM Racing</span></div>
@@ -849,7 +849,7 @@
         <div class="spec-row"><span class="spec-key">Hersteller</span><span class="spec-val">AYVA Cycle Culture</span></div>
         <div class="spec-row"><span class="spec-key">Größen</span><span class="spec-val">XS — XXL</span></div>
       </div>
-      <a href="mailto:info@madmonday.berlin?subject=Kit%20Anfrage%202026" class="kit-buy-cta">Kit anfragen →</a>
+      <a href="/cdn-cgi/l/email-protection#87eee9e1e8c7eae6e3eae8e9e3e6fea9e5e2f5ebeee9b8f4f2e5ede2e4f3bacceef3a2b5b7c6e9e1f5e6e0e2a2b5b7b5b7b5b1" class="kit-buy-cta">Kit anfragen →</a>
     </div>
   </div>
 </section>
@@ -929,7 +929,7 @@
   </div>
   <div style="text-align:center;margin-top:48px;">
     <p style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.25em;opacity:.25;text-transform:uppercase;">
-      Partner werden — <a href="mailto:info@madmonday.berlin?subject=Partnership" style="color:var(--sand);opacity:.5;text-decoration:none;">info@madmonday.berlin</a>
+      Partner werden — <a href="/cdn-cgi/l/email-protection#3d54535b527d505c59505253595c44135f584f515453024e485f57585e49006d5c4f4953584f4e55544d" style="color:var(--sand);opacity:.5;text-decoration:none;"><span class="__cf_email__" data-cfemail="e0898e868fa08d81848d8f8e848199ce8285928c898e">[email&#160;protected]</span></a>
     </p>
   </div>
 </section>
@@ -959,7 +959,7 @@
   <span>No sponsors. No excuses.</span>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ════════════════════════════════════════
 // CURSOR
 // ════════════════════════════════════════
@@ -1169,7 +1169,7 @@ ecArea.setAttribute('fill','url(#ecg)');elevChartSvg.appendChild(ecArea);
   lbl.setAttribute('font-family','Space Mono,monospace');lbl.setAttribute('font-size',9);
   lbl.textContent=`${Math.round(v)}m`;elevChartSvg.appendChild(lbl);
 });
-[{km:30,label:'DP1/2'},{km:50,label:'DP3'}].forEach(({km,label})=>{
+[{km:9,label:'DP 1/2'},{km:34,label:'DP 3'}].forEach(({km,label})=>{
   const x=(km/60)*ECW;
   const vl=document.createElementNS('http://www.w3.org/2000/svg','line');
   vl.setAttribute('x1',x);vl.setAttribute('x2',x);vl.setAttribute('y1',0);vl.setAttribute('y2',ECH);
@@ -1299,20 +1299,4 @@ routeObs.observe(document.getElementById('route'));
   // Keyboard shortcuts
   document.addEventListener('keydown', function onKey(e) {
     if (['Escape','Enter',' '].includes(e.key)) {
-      document.removeEventListener('keydown', onKey);
-      closeMMIntro();
-    }
-  });
-})();
-
-function closeMMIntro() {
-  const overlay = document.getElementById('mm-intro');
-  if (!overlay || overlay.classList.contains('exit')) return;
-  sessionStorage.setItem('mm_seen', '1');
-  overlay.classList.add('exit');
-  setTimeout(() => overlay.remove(), 1050);
-}
-
-</script>
-</body>
-</html>
+      document.removeEventListener('keydown', 
