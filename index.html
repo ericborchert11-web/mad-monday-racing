@@ -458,15 +458,13 @@
     font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
     font-size: clamp(14px, 2.5vw, 20px); letter-spacing: 0.4em;
     text-transform: uppercase; color: var(--sand);
-    opacity: 0; transform: translateY(16px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
+    animation: mmEnterIn 0.7s 1.0s ease both;
   }
   #mm-claim2 {
     font-family: 'Space Mono', monospace; font-size: clamp(8px, 1.2vw, 11px);
     letter-spacing: 0.35em; text-transform: uppercase;
     color: rgba(210,197,177,.4);
-    opacity: 0; transform: translateY(12px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
+    animation: mmEnterIn 0.7s 1.3s ease both;
   }
 
   /* Enter button */
@@ -479,8 +477,12 @@
     font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
     font-size: 12px; letter-spacing: 0.5em; text-transform: uppercase;
     cursor: none; overflow: hidden;
-    opacity: 0; transform: translateY(10px);
-    transition: opacity 0.6s ease, transform 0.6s ease, color 0.3s, border-color 0.3s;
+    animation: mmEnterIn 0.7s 1.6s ease both;
+    transition: color 0.3s, border-color 0.3s;
+  }
+  @keyframes mmEnterIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
   #mm-enter::after {
     content: ''; position: absolute; inset: 0;
@@ -1266,18 +1268,8 @@ routeObs.observe(document.getElementById('route'));
   }
 
   // Staggered text animations
-  setTimeout(() => {
-    const c1 = document.getElementById('mm-claim1');
-    if (c1) { c1.style.opacity = '1'; c1.style.transform = 'translateY(0)'; }
-  }, 1100);
-  setTimeout(() => {
-    const c2 = document.getElementById('mm-claim2');
-    if (c2) { c2.style.opacity = '1'; c2.style.transform = 'translateY(0)'; }
-  }, 1400);
-  setTimeout(() => {
-    const btn = document.getElementById('mm-enter');
-    if (btn) { btn.style.opacity = '1'; btn.style.transform = 'translateY(0)'; }
-  }, 1800);
+  // claims shown via CSS animation (mmEnterIn)
+  // button shown via CSS animation (mmEnterIn)
 
   // Mouse parallax
   let raf = null;
